@@ -76,7 +76,7 @@ body {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 8px 16px;
+  padding: 5px 16px;
   border-bottom: 2px solid var(--border);
   position: sticky;
   top: 0;
@@ -120,7 +120,7 @@ body {
   display: flex;
   align-items: center;
   gap: 8px;
-  height: 30px;
+  height: 38px;
 }
 
 .panel-header .title-with-thumbs h2 {
@@ -866,10 +866,10 @@ menu button:active {
 .panel-header .selected-thumbs .thumb.drawing::after {
   content: '';
   position: absolute;
-  left: 2px;
-  right: 2px;
-  bottom: -8px; /* adjust for 16px thumb */
-  height: 3px;
+  left: 3px;
+  right: 3px;
+  bottom: 17px;
+  height: 6px;
   background: var(--draw-color, var(--accent));
   border-radius: 13px;
 }
