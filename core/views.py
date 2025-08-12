@@ -473,14 +473,15 @@ def import_data(request):
                 # Parse date
                 item_date = datetime.strptime(item_data['date'], '%Y-%m-%d').date()
 
-                # Check if item with same title already exists in this event
+                                # Check if item with same title AND date already exists in this event
                 existing_item = EventItem.objects.filter(
                     event=current_event,
-                    title=item_data['title']
+                    title=item_data['title'],
+                    date=item_date
                 ).first()
 
                 if existing_item:
-                    print(f"Debug: Item '{item_data['title']}' already exists in event '{event_title}', skipping")
+                    print(f"Debug: Item '{item_data['title']}' on date '{item_data['date']}' already exists in event '{event_title}', skipping")
                     continue
 
                 # Create item
