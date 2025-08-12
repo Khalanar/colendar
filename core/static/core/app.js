@@ -429,10 +429,9 @@ async function onCellHoverIn(e, dateStr) {
   const lines = itemsOnDate.slice(0, 6).map(it => {
     const ev = state.events.find(e => e.id === it.event_id);
     const color = ev?.color ?? '#999';
-    const evTitle = ev?.title ?? 'Event';
     const time = it.time ? ` • ${escapeHtml(it.time)}` : '';
     const desc = it.description ? `<div class=\"meta\">${escapeHtml(it.description)}</div>` : '';
-    return `<div class=\"tip-item\"><span class=\"pill\" style=\"background:${color}\"></span><strong>${escapeHtml(evTitle)}</strong> — ${escapeHtml(it.title)}${time}${desc}</div>`;
+    return `<div class=\"tip-item\"><span class=\"pill\" style=\"background:${color}\"></span><strong>${escapeHtml(it.title)}</strong>${time}${desc}</div>`;
   });
 
   const rect = e.clientX && e.clientY ? { x: e.clientX, y: e.clientY } : null;
