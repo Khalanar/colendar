@@ -560,21 +560,21 @@ function renderSelectedEventThumbs() {
         t.style.setProperty('--draw-color', ev.color || '#666');
       }
 
-      // Add click handler to start drawing this event
-      t.addEventListener('click', async (e) => {
+      // Add click handler to toggle visibility (highlight)
+      t.addEventListener('click', (e) => {
+        e.stopPropagation();
+        toggleEventHighlight(ev.id);
+      });
+
+      // Right-click: set this event as the active drawing event
+      t.addEventListener('contextmenu', async (e) => {
+        e.preventDefault();
         e.stopPropagation();
         state.drawEventId = ev.id;
         renderEventsList();
         renderSelectedEventThumbs();
         await loadItemsForEvent(ev.id);
         paintCalendarSelections();
-      });
-
-      // Right-click: toggle visibility (highlight)
-      t.addEventListener('contextmenu', (e) => {
-        e.preventDefault();
-        e.stopPropagation();
-        toggleEventHighlight(ev.id);
       });
 
       t.addEventListener('mouseenter', (e) => {
