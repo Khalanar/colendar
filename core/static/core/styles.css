@@ -341,6 +341,10 @@ body {
 .event-actions {
   position: relative;
   z-index: 5;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  justify-self: end; /* push to right in grid */
 }
 
 /* Items cards */
@@ -810,16 +814,9 @@ menu button:active {
 .draw-btn.active { color: #10b981; border-color: #10b981; }
 
 /* Make the eye/view button slide in with draw-text */
-.event-actions {
-  opacity: 0;
-  transform: translateX(8px);
-  transition: opacity 0.15s ease, transform 0.15s ease;
-}
+.event-actions { opacity: 0; transition: opacity 0.15s ease; pointer-events: none; }
 .event-row:hover .event-actions,
-.event-row.drawing-active .event-actions {
-  opacity: 1;
-  transform: translateX(0);
-}
+.event-row.drawing-active .event-actions { opacity: 1; pointer-events: auto; }
 
 .icon-btn {
   appearance: none;
