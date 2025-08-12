@@ -135,6 +135,8 @@ body {
   display: inline-flex;
   gap: 6px;
   align-items: center;
+  padding-right: 8px; /* prevent last thumb border from being clipped */
+  overflow: visible;
 }
 
 .count-badge {
