@@ -466,7 +466,11 @@ def import_data(request):
             elif line.startswith('- Title:') and current_event:
                 # Parse item line
                 item_data = {}
-                parts = line[9:].split(' | ')
+                # Find the position after "- Title: " to get the rest of the line
+                title_start = line.find('Title:') + 6  # Length of "Title:"
+                parts = line[title_start:].split(' | ')
+                print(f"Debug: Parsing line: '{line}'")
+                print(f"Debug: Parts: {parts}")
 
                 for part in parts:
                     if ':' in part:
@@ -495,7 +499,9 @@ def import_data(request):
         if current_event:
             current_event.save()
             events_created += 1
+            print(f"Debug: Found {len(current_items)} items to create")
             for item_data in current_items:
+                print(f"Debug: Creating item with data: {item_data}")
                 EventItem.objects.create(
                     event=current_event,
                     **item_data
