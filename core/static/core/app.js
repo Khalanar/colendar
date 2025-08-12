@@ -1137,6 +1137,11 @@ function onCellClick(cell, dateStr) {
       renderDayItemsPanel();
     });
   }
+  // Visual selection: move day-active to the clicked cell
+  try {
+    document.querySelectorAll('.cell.day-active').forEach(el => el.classList.remove('day-active'));
+    cell.classList.add('day-active');
+  } catch {}
 }
 
 function onCellRightClick(cell, dateStr, eventObj) {
