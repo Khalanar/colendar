@@ -152,8 +152,8 @@ body {
 }
 
 .panel-header .selected-thumbs .thumb {
-  width: 12px;
-  height: 12px;
+  width: 16px;
+  height: 16px;
   border-radius: 3px;
   cursor: pointer;
   transition: all 0.2s ease;
@@ -868,10 +868,10 @@ menu button:active {
   position: absolute;
   left: 2px;
   right: 2px;
-  bottom: -7px; /* lower underline */
-  height: 3px;   /* thicker line */
+  bottom: -8px; /* adjust for 16px thumb */
+  height: 3px;
   background: var(--draw-color, var(--accent));
-  border-radius: 13px; /* fully rounded ends */
+  border-radius: 13px;
 }
 
 /* Event row left bar when drawing active */
