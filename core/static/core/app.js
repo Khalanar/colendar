@@ -506,6 +506,19 @@ function renderSelectedEventThumbs() {
   });
 }
 
+function toggleEventHighlight(eventId) {
+  if (state.highlightEventIds.has(eventId)) {
+    state.highlightEventIds.delete(eventId);
+  } else {
+    state.highlightEventIds.add(eventId);
+  }
+
+  saveHighlightState();
+  renderSelectedEventThumbs();
+  loadItemsForEvent(eventId);
+  paintCalendarSelections();
+}
+
 function saveHighlightState() {
   try {
     localStorage.setItem(HIGHLIGHT_KEY, JSON.stringify([...state.highlightEventIds]));
