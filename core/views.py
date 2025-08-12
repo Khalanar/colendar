@@ -1,6 +1,7 @@
 import json
-from datetime import datetime, date
+from datetime import datetime, date, timedelta
 from typing import Optional
+import random
 
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
@@ -13,10 +14,103 @@ import time
 from .models import Event, EventItem
 
 
+def get_random_color():
+    """Generate a random color in hex format"""
+    colors = [
+        '#3B82F6', '#EF4444', '#10B981', '#F59E0B', '#8B5CF6',
+        '#06B6D4', '#F97316', '#84CC16', '#EC4899', '#6366F1',
+        '#14B8A6', '#F43F5E', '#EAB308', '#A855F7', '#0EA5E9'
+    ]
+    return random.choice(colors)
+
+
+def create_sample_data_for_user(user):
+    """Create sample events and items for a new user"""
+    # Check if user already has events
+    if Event.objects.filter(user=user).exists():
+        return
+
+    # Sample event titles
+    event_titles = [
+        "Work Meetings",
+        "Personal Tasks",
+        "Health & Fitness",
+        "Learning & Study",
+        "Social Events",
+        "Home Projects"
+    ]
+
+    # Sample item titles
+    item_titles = [
+        "Team standup",
+        "Project review",
+        "Gym workout",
+        "Read documentation",
+        "Call with client",
+        "Code review",
+        "Lunch with team",
+        "Weekly planning",
+        "Exercise routine",
+        "Study session"
+    ]
+
+    # Sample descriptions
+    descriptions = [
+        "Important team discussion",
+        "Review project progress",
+        "Daily fitness routine",
+        "Learning new technology",
+        "Client consultation",
+        "Code quality check",
+        "Team building activity",
+        "Plan next week's tasks",
+        "Physical activity",
+        "Educational content review"
+    ]
+
+    # Create 2 random events
+    selected_events = random.sample(event_titles, 2)
+
+    for event_title in selected_events:
+        event = Event.objects.create(
+            title=event_title,
+            color=get_random_color(),
+            user=user
+        )
+
+        # Create 2-3 items for today and tomorrow
+        today = date.today()
+        tomorrow = today + timedelta(days=1)
+
+        for day in [today, tomorrow]:
+            num_items = random.randint(1, 2)  # 1-2 items per day
+            for _ in range(num_items):
+                item_title = random.choice(item_titles)
+                description = random.choice(descriptions)
+
+                # Random time between 9 AM and 5 PM
+                hour = random.randint(9, 17)
+                minute = random.choice([0, 15, 30, 45])
+                time_str = f"{hour:02d}:{minute:02d}"
+
+                EventItem.objects.create(
+                    event=event,
+                    title=item_title,
+                    time=time_str,
+                    description=description,
+                    notes="Sample item - feel free to edit or delete!",
+                    date=day
+                )
+
+
 @login_required
 def index(request: HttpRequest) -> HttpResponse:
     if not request.user.is_authenticated:
         return redirect('account_login')
+
+    # Create sample data for new users
+    create_sample_data_for_user(request.user)
+
     context = {
         'timestamp': int(time.time())  # Cache busting for JavaScript
     }
