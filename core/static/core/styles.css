@@ -195,9 +195,9 @@ body {
 
 /* Remove rounded label pills in right pane (events list bullets only) */
 .event-color {
-  width: 12px;
-  height: 12px;
-  border-radius: 2px;
+  width: 16px;
+  height: 16px;
+  border-radius: 3px;
   border: 2px solid transparent;
   box-shadow: 0 0 0 1px rgba(0,0,0,0.2) inset;
   transition: background 0.2s ease, border-color 0.2s ease;
@@ -205,8 +205,8 @@ body {
 
 /* Event color square mirrors header thumbs */
 .event-color {
-  width: 12px;
-  height: 12px;
+  width: 16px;
+  height: 16px;
   border-radius: 3px;
   display: inline-block;
   position: relative;
