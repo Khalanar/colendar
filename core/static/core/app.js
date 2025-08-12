@@ -484,13 +484,14 @@ function renderSelectedEventThumbs() {
       const t = document.createElement('span');
       t.className = 'thumb';
       t.style.background = isHighlighted ? (ev.color || '#475569') : 'transparent';
-      t.style.border = '2px solid #666';
+      t.style.border = `2px solid ${ev.color || '#666'}`;
       t.style.cursor = 'pointer';
       t.setAttribute('aria-label', ev.title || 'Event');
       t.setAttribute('role', 'img');
 
       // Add click handler to toggle event
-      t.addEventListener('click', () => {
+      t.addEventListener('click', (e) => {
+        e.stopPropagation();
         toggleEventHighlight(ev.id);
       });
 
