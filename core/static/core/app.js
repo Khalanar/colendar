@@ -573,6 +573,38 @@ async function loadItemsForEvent(eventId) {
   }
 }
 
+// debounce token to avoid race conditions
+let highlightToken = 0;
+
+async function toggleEventHighlight(eventId) {
+  const token = ++highlightToken;
+  if (state.highlightEventIds.has(eventId)) {
+    state.highlightEventIds.delete(eventId);
+  } else {
+    state.highlightEventIds.add(eventId);
+  }
+
+  saveHighlightState();
+  renderSelectedEventThumbs();
+  // Ensure items are loaded before painting to avoid multi-click jitter
+  await loadItemsForEvent(eventId);
+  if (token !== highlightToken) return; // a newer toggle occurred, abort
+  paintCalendarSelections();
+
+  // Update the visual state of the event row
+  const eventRow = document.querySelector(`[data-event-id="${eventId}"]`);
+  if (eventRow) {
+    if (state.highlightEventIds.has(eventId)) {
+      eventRow.classList.add('viewing');
+    } else {
+      eventRow.classList.remove('viewing');
+    }
+  }
+
+  // Ensure items panel reflects the current selection
+  renderItemsPanel();
+}
+
 function renderSelectedEventThumbs() {
   const containers = [selectedThumbsEl, eventsThumbsEl];
 
@@ -634,33 +666,6 @@ function renderSelectedEventThumbs() {
   });
 }
 
-function toggleEventHighlight(eventId) {
-  if (state.highlightEventIds.has(eventId)) {
-    state.highlightEventIds.delete(eventId);
-  } else {
-    state.highlightEventIds.add(eventId);
-  }
-
-  saveHighlightState();
-  renderSelectedEventThumbs();
-  loadItemsForEvent(eventId);
-  paintCalendarSelections();
-
-  // Update the visual state of the event row
-  const eventRow = document.querySelector(`[data-event-id="${eventId}"]`);
-  if (eventRow) {
-    if (state.highlightEventIds.has(eventId)) {
-      eventRow.classList.add('viewing');
-    } else {
-      eventRow.classList.remove('viewing');
-    }
-  }
-
-  // Ensure items panel reflects the current selection
-  renderItemsPanel();
-}
-
-// Generic inline edit utility
 function startInlineEdit(targetEl, initialValue, onSave) {
   const input = document.createElement('input');
   input.type = 'text';
