@@ -1,5 +1,10 @@
 import os
 from pathlib import Path
+import dj_database_url
+from dotenv import load_dotenv
+
+# Load environment variables from .env.local file
+load_dotenv('.env.local')
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -91,8 +96,6 @@ WSGI_APPLICATION = 'colendar_site.wsgi.application'
 
 # Database
 # https://docs.djangoproject.com/en/5.0/ref/settings/#databases
-
-import dj_database_url
 
 # Get DATABASE_URL from environment, with fallback to SQLite
 database_url = os.environ.get('DATABASE_URL')
