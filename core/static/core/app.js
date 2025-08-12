@@ -611,6 +611,21 @@ function toggleEventHighlight(eventId) {
       eventRow.classList.remove('viewing');
     }
   }
+
+  // Ensure items panel reflects the current selection
+  renderItemsPanel();
+}
+
+function isolateEventHighlight(eventId) {
+  // Replace current selection with only this event
+  state.highlightEventIds = new Set([eventId]);
+  saveHighlightState();
+  renderSelectedEventThumbs();
+  loadItemsForEvent(eventId);
+  paintCalendarSelections();
+  renderItemsPanel();
+  // Re-render list to refresh viewing classes across rows
+  renderEventsList();
 }
 
 function saveHighlightState() {
@@ -693,8 +708,12 @@ function renderEventsList() {
     li.appendChild(actions);
 
     // Single click handler for the event row
-    li.addEventListener('click', async () => {
-      toggleEventHighlight(ev.id);
+    li.addEventListener('click', async (e) => {
+      if (e.metaKey) {
+        isolateEventHighlight(ev.id);
+      } else {
+        toggleEventHighlight(ev.id);
+      }
     });
 
     // Set visual state based on highlight status
@@ -710,7 +729,11 @@ function renderEventsList() {
     // Add handlers to mirror thumb behavior
     color.addEventListener('click', (e) => {
       e.stopPropagation();
-      toggleEventHighlight(ev.id);
+      if (e.metaKey) {
+        isolateEventHighlight(ev.id);
+      } else {
+        toggleEventHighlight(ev.id);
+      }
     });
     color.addEventListener('mouseenter', (e) => {
       const html = `<strong>${escapeHtml(ev.title || 'Event')}</strong>`;
