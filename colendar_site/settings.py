@@ -9,12 +9,30 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/5.0/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-your-secret-key-here'
+SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-your-secret-key-here')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = os.environ.get('DEBUG', 'True').lower() in ('1', 'true', 'yes')
 
-ALLOWED_HOSTS = ['127.0.0.1', 'localhost']
+ALLOWED_HOSTS = [h.strip() for h in os.environ.get('ALLOWED_HOSTS', '127.0.0.1,localhost').split(',') if h.strip()]
+
+# Trust proxy headers on Render
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+USE_X_FORWARDED_HOST = True
+
+# CSRF trusted origins (required for admin/login on HTTPS)
+raw_csrf = os.environ.get('CSRF_TRUSTED_ORIGINS', '')
+CSRF_TRUSTED_ORIGINS = [o.strip() for o in raw_csrf.split(',') if o.strip()]
+if not CSRF_TRUSTED_ORIGINS and not DEBUG:
+    # Derive from allowed hosts
+    derived = []
+    for host in ALLOWED_HOSTS:
+        h = host.lstrip('.')
+        if h and h not in ('127.0.0.1', 'localhost'):
+            derived.append(f'https://{h}')
+    if any(h.endswith('onrender.com') or h == '.onrender.com' for h in ALLOWED_HOSTS):
+        derived.append('https://*.onrender.com')
+    CSRF_TRUSTED_ORIGINS = derived
 
 
 # Application definition
@@ -137,15 +155,15 @@ ACCOUNT_SIGNUP_FIELDS = ['email*', 'password1*', 'password2*']
 ACCOUNT_EMAIL_VERIFICATION = 'none'
 LOGIN_REDIRECT_URL = '/'
 LOGOUT_REDIRECT_URL = '/'
-ACCOUNT_DEFAULT_HTTP_PROTOCOL = 'http'
+ACCOUNT_DEFAULT_HTTP_PROTOCOL = os.environ.get('ACCOUNT_DEFAULT_HTTP_PROTOCOL', 'http')
 SOCIALACCOUNT_LOGIN_ON_GET = True
 
 # Google OAuth settings
 SOCIALACCOUNT_PROVIDERS = {
     'google': {
         'APP': {
-            'client_id': '86953640345-5olef194abdmr8n14li7t4b41rkfupk5.apps.googleusercontent.com',
-            'secret': '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',
+            'client_id': os.environ.get('GOOGLE_CLIENT_ID', '86953640345-5olef194abdmr8n14li7t4b41rkfupk5.apps.googleusercontent.com'),
+            'secret': os.environ.get('GOOGLE_CLIENT_SECRET', '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'),
             'key': ''
         },
         'SCOPE': [
