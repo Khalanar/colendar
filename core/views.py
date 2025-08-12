@@ -448,7 +448,9 @@ def import_data(request):
                     else:
                         print(f"Debug: Using existing event '{current_event.title}'")
 
+                    # Always save items for the current event (new or existing)
                     for item_data in current_items:
+                        print(f"Debug: Creating item for event '{current_event.title}': {item_data}")
                         EventItem.objects.create(
                             event=current_event,
                             **item_data
@@ -526,9 +528,10 @@ def import_data(request):
             else:
                 print(f"Debug: Using final existing event '{current_event.title}'")
 
-            print(f"Debug: Found {len(current_items)} items to create")
+            # Always save items for the final event (new or existing)
+            print(f"Debug: Found {len(current_items)} items to create for final event")
             for item_data in current_items:
-                print(f"Debug: Creating item with data: {item_data}")
+                print(f"Debug: Creating final item with data: {item_data}")
                 EventItem.objects.create(
                     event=current_event,
                     **item_data
