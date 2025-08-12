@@ -103,27 +103,45 @@ else:
     print("No DATABASE_URL found, using SQLite")
 
 # Validate and fix DATABASE_URL
+valid_database_url = None
 if database_url:
     if database_url.startswith('https://'):
         print("ERROR: DATABASE_URL is an HTTPS URL, not a database connection string")
         print("Please set DATABASE_URL to the PostgreSQL connection string from your Render database")
-        database_url = None
+        print("Falling back to SQLite database")
     elif database_url.startswith('postgres://'):
         # Fix for Render's postgres:// URLs (should be postgresql://)
-        database_url = database_url.replace('postgres://', 'postgresql://', 1)
+        valid_database_url = database_url.replace('postgres://', 'postgresql://', 1)
         print("Fixed postgres:// to postgresql://")
+    elif database_url.startswith('postgresql://'):
+        valid_database_url = database_url
+        print("Valid PostgreSQL URL found")
+    else:
+        print(f"Unknown DATABASE_URL format: {database_url[:30]}...")
+        print("Falling back to SQLite database")
 
 # Use SQLite if no valid DATABASE_URL
-if not database_url:
-    database_url = 'sqlite:///' + str(BASE_DIR / 'db.sqlite3')
+if not valid_database_url:
+    valid_database_url = 'sqlite:///' + str(BASE_DIR / 'db.sqlite3')
     print("Using SQLite database")
 
-DATABASES = {
-    'default': dj_database_url.config(
-        default=database_url,
-        conn_max_age=600
-    )
-}
+try:
+    DATABASES = {
+        'default': dj_database_url.config(
+            default=valid_database_url,
+            conn_max_age=600
+        )
+    }
+    print("Database configuration successful")
+except Exception as e:
+    print(f"Database configuration failed: {e}")
+    print("Falling back to SQLite")
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': BASE_DIR / 'db.sqlite3',
+        }
+    }
 
 
 # Password validation
