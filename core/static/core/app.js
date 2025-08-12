@@ -570,10 +570,12 @@ function renderSelectedEventThumbs() {
       t.addEventListener('contextmenu', async (e) => {
         e.preventDefault();
         e.stopPropagation();
-        state.drawEventId = ev.id;
+        state.drawEventId = (state.drawEventId === ev.id) ? null : ev.id;
         renderEventsList();
         renderSelectedEventThumbs();
-        await loadItemsForEvent(ev.id);
+        if (state.drawEventId === ev.id) {
+          await loadItemsForEvent(ev.id);
+        }
         paintCalendarSelections();
       });
 
