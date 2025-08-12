@@ -354,7 +354,7 @@ body {
 .item { background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0)) , var(--panel); border: 1px solid var(--border); border-radius: 0; padding: 8px; margin-bottom: 0; }
 .item .row { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
 .item .meta { font-size: 12px; color: var(--muted); }
-.item .title { font-weight: 600; margin: 4px 0; }
+.item .title { font-weight: 600; margin: 4px 0; font-size: 0.9em; opacity: 0.8; }
 .item .actions { display: flex; gap: 6px; margin-left: auto; }
 .empty-day { color: var(--muted); font-size: 12px; padding: 12px; text-align: center; }
 
@@ -889,3 +889,9 @@ menu button:active {
   height: 100%;
   background: var(--evcolor, var(--accent));
 }
+
+/* Event text styling */
+.event-row .event-title { font-size: 0.9em; opacity: 0.8; }
+
+/* Item title styling */
+.item .title { font-weight: 600; margin: 4px 0; font-size: 0.9em; opacity: 0.8; }
