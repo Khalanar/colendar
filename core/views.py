@@ -1,5 +1,5 @@
 import json
-from datetime import datetime
+from datetime import datetime, date
 from typing import Optional
 
 from django.contrib.auth.decorators import login_required
@@ -13,14 +13,43 @@ import time
 from .models import Event, EventItem
 
 
-# @login_required
+@login_required
 def index(request: HttpRequest) -> HttpResponse:
-    return render(request, "core/index.html")
+    if not request.user.is_authenticated:
+        return redirect('account_login')
+    context = {
+        'timestamp': int(time.time())  # Cache busting for JavaScript
+    }
+    return render(request, "core/index.html", context)
 
 
-# @login_required
+@login_required
 def settings_view(request):
-    return render(request, 'core/settings.html')
+    if not request.user.is_authenticated:
+        return redirect('account_login')
+
+    if request.method == 'POST':
+        # Handle settings updates
+        username = request.POST.get('username')
+        email = request.POST.get('email')
+
+        if username and username != request.user.username:
+            if User.objects.filter(username=username).exists():
+                messages.error(request, 'Username already taken')
+            else:
+                request.user.username = username
+                request.user.save()
+                messages.success(request, 'Username updated successfully')
+
+        if email and email != request.user.email:
+            if User.objects.filter(email=email).exists():
+                messages.error(request, 'Email already taken')
+            else:
+                request.user.email = email
+                request.user.save()
+                messages.success(request, 'Email updated successfully')
+
+    return render(request, "core/settings.html")
 
 
 def _json(request: HttpRequest) -> dict:
@@ -32,29 +61,30 @@ def _json(request: HttpRequest) -> dict:
     return {}
 
 
-# @login_required
+@login_required
+@csrf_exempt
 def events_api(request):
     if request.method == 'GET':
-        events = Event.objects.all()  # Remove user filter temporarily
+        events = Event.objects.filter(user=request.user)
         return JsonResponse([event.to_dict() for event in events], safe=False)
     elif request.method == 'POST':
         data = json.loads(request.body)
         event = Event.objects.create(
             title=data['title'],
             color=data['color'],
-            user=request.user if request.user.is_authenticated else None
+            user=request.user
         )
         return JsonResponse(event.to_dict(), status=201)
     elif request.method == 'PUT':
         data = json.loads(request.body)
-        event = Event.objects.get(id=data['id'])
+        event = Event.objects.get(id=data['id'], user=request.user)
         event.title = data['title']
         event.color = data['color']
         event.save()
         return JsonResponse(event.to_dict())
     elif request.method == 'DELETE':
         data = json.loads(request.body)
-        event = Event.objects.get(id=data['id'])
+        event = Event.objects.get(id=data['id'], user=request.user)
         event.delete()
         return JsonResponse({}, status=204)
 
@@ -75,23 +105,24 @@ def event_detail(request: HttpRequest, event_id: int):
     return HttpResponseNotAllowed(["PATCH", "DELETE"])
 
 
-# @login_required
+@login_required
+@csrf_exempt
 def items_api(request):
     if request.method == 'GET':
         event_id = request.GET.get('event_id')
         date_str = request.GET.get('date')
 
         if event_id:
-            items = EventItem.objects.filter(event_id=event_id)  # Remove user filter temporarily
+            items = EventItem.objects.filter(event_id=event_id, event__user=request.user)
         elif date_str:
-            items = EventItem.objects.filter(date=date_str)  # Remove user filter temporarily
+            items = EventItem.objects.filter(date=date_str, event__user=request.user)
         else:
-            items = EventItem.objects.all()  # Remove user filter temporarily
+            items = EventItem.objects.filter(event__user=request.user)
 
         return JsonResponse([item.to_dict() for item in items], safe=False)
     elif request.method == 'POST':
         data = json.loads(request.body)
-        event = Event.objects.get(id=data['event_id'])
+        event = Event.objects.get(id=data['event_id'], user=request.user)
         item = EventItem.objects.create(
             event=event,
             title=data['title'],
@@ -103,7 +134,7 @@ def items_api(request):
         return JsonResponse(item.to_dict(), status=201)
     elif request.method == 'PUT':
         data = json.loads(request.body)
-        item = EventItem.objects.get(id=data['id'])
+        item = EventItem.objects.get(id=data['id'], event__user=request.user)
         item.title = data['title']
         item.time = data.get('time', '')
         item.description = data.get('description', '')
@@ -113,7 +144,7 @@ def items_api(request):
         return JsonResponse(item.to_dict())
     elif request.method == 'DELETE':
         data = json.loads(request.body)
-        item = EventItem.objects.get(id=data['id'])
+        item = EventItem.objects.get(id=data['id'], event__user=request.user)
         item.delete()
         return JsonResponse({}, status=204)
 
