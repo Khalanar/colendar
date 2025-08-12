@@ -440,8 +440,14 @@ def import_data(request):
             if line.startswith('Event:'):
                 # Save previous event if exists
                 if current_event:
-                    current_event.save()
-                    events_created += 1
+                    # Only save if it's a new event (not an existing one)
+                    if not current_event.id:
+                        current_event.save()
+                        events_created += 1
+                        print(f"Debug: Saved new event '{current_event.title}'")
+                    else:
+                        print(f"Debug: Using existing event '{current_event.title}'")
+
                     for item_data in current_items:
                         EventItem.objects.create(
                             event=current_event,
@@ -451,11 +457,20 @@ def import_data(request):
 
                 # Start new event
                 event_title = line[6:].strip()
-                current_event = Event(
-                    user=request.user,
-                    title=event_title,
-                    color=get_random_color()
-                )
+
+                # Check if event with same name already exists for this user
+                existing_event = Event.objects.filter(user=request.user, title=event_title).first()
+                if existing_event:
+                    print(f"Debug: Event '{event_title}' already exists, using existing event")
+                    current_event = existing_event
+                else:
+                    current_event = Event(
+                        user=request.user,
+                        title=event_title,
+                        color=get_random_color()
+                    )
+                    print(f"Debug: Creating new event '{event_title}'")
+
                 current_items = []
 
             elif line.startswith('Color:') and current_event:
@@ -503,8 +518,14 @@ def import_data(request):
 
         # Save the last event
         if current_event:
-            current_event.save()
-            events_created += 1
+            # Only save if it's a new event (not an existing one)
+            if not current_event.id:
+                current_event.save()
+                events_created += 1
+                print(f"Debug: Saved final new event '{current_event.title}'")
+            else:
+                print(f"Debug: Using final existing event '{current_event.title}'")
+
             print(f"Debug: Found {len(current_items)} items to create")
             for item_data in current_items:
                 print(f"Debug: Creating item with data: {item_data}")
