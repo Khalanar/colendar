@@ -514,7 +514,7 @@ function renderEventsList() {
 
     const actions = document.createElement('div'); actions.className = 'event-actions';
     const editBtn = document.createElement('button'); editBtn.textContent = 'Edit'; editBtn.addEventListener('click', (e) => { e.stopPropagation(); openEventDialog(ev); });
-    const delBtn = document.createElement('button'); delBtn.textContent = 'Delete'; delBtn.addEventListener('click', async (e) => { e.stopPropagation(); await api.del(`/api/events/${ev.id}`); state.highlightEventIds.delete(ev.id); if (state.drawEventId === ev.id) state.drawEventId = null; if (state.viewingEventId === ev.id) state.viewingEventId = null; saveHighlightState(); await refreshEvents(); });
+    const delBtn = document.createElement('button'); delBtn.textContent = 'Delete'; delBtn.addEventListener('click', async (e) => { e.stopPropagation(); await api.del(`/api/events/${ev.id}`); window.location.reload(); });
     actions.appendChild(editBtn); actions.appendChild(delBtn);
 
     li.appendChild(radio); li.appendChild(color); li.appendChild(title); li.appendChild(actions);
