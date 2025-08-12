@@ -1021,7 +1021,68 @@ async function boot() {
   await loadItemsForDate(todayStr);
   renderDayItemsPanel();
 }
-boot();
+
+const isTouchDevice = matchMedia('(pointer: coarse)').matches || 'ontouchstart' in window;
+
+function initMobileTabs() {
+  const tabbar = document.getElementById('mobileTabbar');
+  if (!tabbar) return;
+  const views = {
+    calendar: document.querySelector('[data-view="calendar"]'),
+    day: document.querySelector('[data-view="day"]'),
+    events: document.querySelector('[data-view="events"]'),
+    items: document.querySelector('[data-view="items"]'),
+  };
+
+  function activate(target) {
+    Object.values(views).forEach(v => v && v.classList.remove('active'));
+    const btns = tabbar.querySelectorAll('button');
+    btns.forEach(b => b.classList.remove('active'));
+    if (views[target]) views[target].classList.add('active');
+    const activeBtn = tabbar.querySelector(`button[data-target="${target}"]`);
+    if (activeBtn) activeBtn.classList.add('active');
+  }
+
+  tabbar.addEventListener('click', (e) => {
+    const btn = e.target.closest('button[data-target]');
+    if (!btn) return;
+    const target = btn.getAttribute('data-target');
+    activate(target);
+  });
+
+  // Default to calendar; if a day is preselected, show day
+  if (window.innerWidth <= 768) {
+    if (state.dayItemsDate) activate('day'); else activate('calendar');
+  }
+}
+
+function disableHoverOnlyUIOnTouch() {
+  if (!isTouchDevice) return;
+  // Ensure draw text remains hidden on touch devices
+  document.querySelectorAll('.draw-text').forEach(el => el.style.display = 'none');
+}
+
+window.addEventListener('resize', () => {
+  if (window.innerWidth <= 768) {
+    // make sure tabbar exists and one tab is active
+    initMobileTabs();
+  }
+});
+
+// Hook into boot/init
+const originalBoot = typeof boot === 'function' ? boot : null;
+async function bootWrapper() {
+  if (originalBoot) await originalBoot();
+  initMobileTabs();
+  disableHoverOnlyUIOnTouch();
+}
+
+// Replace boot reference if present
+if (typeof boot !== 'function') {
+  window.addEventListener('DOMContentLoaded', () => bootWrapper());
+} else {
+  window.boot = bootWrapper;
+}
 
 function getRandomColor() {
   // Generate a pleasing pastel-ish color in hex
