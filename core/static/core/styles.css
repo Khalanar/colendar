@@ -158,7 +158,7 @@ body {
 
 /* Remove rounded label pills in right pane (events list bullets only) */
 .event-color { width: 12px; height: 12px; border-radius: 2px; border: 1px solid rgba(255,255,255,0.08); box-shadow: 0 0 0 1px rgba(0,0,0,0.2) inset; }
-.event-row { display: grid; grid-template-columns: 18px 16px 1fr auto; align-items: center; gap: 8px; padding: 6px 8px; border-bottom: 1px solid var(--border); cursor: pointer; position: relative; }
+.event-row { display: grid; grid-template-columns: 16px 1fr auto; align-items: center; gap: 8px; padding: 6px 8px; border-bottom: 1px solid var(--border); cursor: pointer; position: relative; }
 .event-row.viewing { background: color-mix(in srgb, var(--evcolor) 16%, transparent); }
 .event-row.viewing::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 3px; background: var(--evcolor, #475569); border-radius: 0; }
 
@@ -174,10 +174,31 @@ body {
   cursor: pointer;
   transition: background .12s ease, border-color .12s ease, box-shadow .12s ease, transform .12s ease;
 }
+
 .event-actions button:hover,
-.item .actions button:hover { background: linear-gradient(180deg, rgba(255,255,255,0.08), rgba(0,0,0,0.08)); border-color: color-mix(in oklab, var(--accent) 40%, var(--border) 60%); box-shadow: 0 0 0 3px var(--ring); }
+.item .actions button:hover {
+  background: linear-gradient(180deg, rgba(255,255,255,0.08), rgba(0,0,0,0.08));
+  border-color: color-mix(in oklab, var(--accent) 40%, var(--border) 60%);
+  box-shadow: 0 0 0 3px var(--ring);
+}
+
 .event-actions button:active,
-.item .actions button:active { transform: translateY(1px); }
+.item .actions button:active {
+  transform: translateY(1px);
+}
+
+/* Draw button specific styling */
+.draw-btn {
+  background: linear-gradient(180deg, rgba(99, 102, 241, 0.1), rgba(99, 102, 241, 0.05)) !important;
+  border-color: rgba(99, 102, 241, 0.3) !important;
+  color: #6366f1 !important;
+  font-weight: 500;
+}
+
+.draw-btn:hover {
+  background: linear-gradient(180deg, rgba(99, 102, 241, 0.2), rgba(99, 102, 241, 0.1)) !important;
+  border-color: rgba(99, 102, 241, 0.5) !important;
+}
 
 /* Hide actions by default; reveal on hover */
 .event-actions, .item .actions { opacity: 0; visibility: hidden; pointer-events: none; transition: opacity .12s ease; }
@@ -229,13 +250,124 @@ body {
 .tooltip .pill { display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin-right: 6px; }
 
 /* Dialogs */
-dialog { border: 1px solid var(--border); border-radius: 10px; padding: 16px; background: var(--panel); color: var(--text-primary); }
-dialog form { display: grid; gap: 10px; min-width: 380px; }
-dialog form .row { display: grid; grid-template-columns: 1fr 140px; gap: 10px; }
-dialog input, dialog textarea, dialog button { background: var(--bg-hover); color: var(--text-primary); border: 1px solid var(--border); border-radius: 8px; padding: 8px; }
-dialog textarea { min-height: 80px; }
-dialog input[type="color"] { padding: 0; }
-menu { display: flex; justify-content: flex-end; gap: 8px; margin: 0; padding: 0; }
+dialog {
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 0;
+  background: var(--panel);
+  color: var(--text-primary);
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  min-width: 480px;
+}
+
+dialog::backdrop {
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(4px);
+}
+
+dialog form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 24px;
+}
+
+dialog h3 {
+  margin: 0 0 8px 0;
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr 140px;
+  gap: 12px;
+}
+
+.form-group label {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-primary);
+}
+
+.form-group input,
+.form-group select,
+.form-group textarea {
+  background: var(--bg-hover);
+  color: var(--text-primary);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 10px 12px;
+  font-size: 14px;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.form-group input:focus,
+.form-group select:focus,
+.form-group textarea:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+}
+
+.form-group textarea {
+  min-height: 80px;
+  resize: vertical;
+}
+
+.form-group input[type="color"] {
+  padding: 0;
+  height: 40px;
+}
+
+menu {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  margin: 8px 0 0 0;
+  padding: 0;
+}
+
+menu button {
+  appearance: none;
+  padding: 10px 20px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s ease, transform 0.1s ease;
+  border: 1px solid var(--border);
+}
+
+menu button[type="button"] {
+  background: transparent;
+  color: var(--text-primary);
+}
+
+menu button[type="button"]:hover {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+menu button[type="submit"] {
+  background: var(--accent);
+  color: white;
+  border-color: var(--accent);
+}
+
+menu button[type="submit"]:hover {
+  background: color-mix(in oklab, var(--accent) 90%, black);
+}
+
+menu button:active {
+  transform: translateY(1px);
+}
 
 /* User menu */
 .user-menu { position: relative; display: flex; align-items: center; gap: 8px; cursor: pointer; }

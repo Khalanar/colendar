@@ -505,19 +505,29 @@ function renderEventsList() {
   state.events.forEach(ev => {
     const li = document.createElement('li'); li.className = 'event-row';
 
-    const radio = document.createElement('input'); radio.type = 'radio'; radio.name = 'drawEvent'; radio.checked = state.drawEventId === ev.id;
-    radio.addEventListener('click', async (e) => { e.stopPropagation(); state.drawEventId = ev.id; await loadItemsForEvent(ev.id); paintCalendarSelections(); });
-
     const color = document.createElement('span'); color.className = 'event-color'; color.style.background = ev.color;
 
     const title = document.createElement('div'); title.className = 'event-title'; title.textContent = ev.title;
 
     const actions = document.createElement('div'); actions.className = 'event-actions';
+    const drawBtn = document.createElement('button');
+    drawBtn.textContent = 'Draw';
+    drawBtn.className = 'draw-btn';
+    drawBtn.addEventListener('click', async (e) => {
+      e.stopPropagation();
+      // Clear any existing draw mode
+      state.drawEventId = null;
+      // Set this event as draw mode
+      state.drawEventId = ev.id;
+      await loadItemsForEvent(ev.id);
+      paintCalendarSelections();
+    });
+
     const editBtn = document.createElement('button'); editBtn.textContent = 'Edit'; editBtn.addEventListener('click', (e) => { e.stopPropagation(); openEventDialog(ev); });
     const delBtn = document.createElement('button'); delBtn.textContent = 'Delete'; delBtn.addEventListener('click', async (e) => { e.stopPropagation(); await api.del(`/api/events/${ev.id}`); window.location.reload(); });
-    actions.appendChild(editBtn); actions.appendChild(delBtn);
+    actions.appendChild(drawBtn); actions.appendChild(editBtn); actions.appendChild(delBtn);
 
-    li.appendChild(radio); li.appendChild(color); li.appendChild(title); li.appendChild(actions);
+    li.appendChild(color); li.appendChild(title); li.appendChild(actions);
 
     li.addEventListener('click', async () => {
       if (state.highlightEventIds.has(ev.id)) {
@@ -709,6 +719,20 @@ function openEventDialog(event) {
 function openItemDialog(item, dateStr) {
   currentEditItemDate = dateStr;
   itemDialogTitle.textContent = item?.id ? 'Edit Item' : `New Item (${formatDate(dateStr)})`;
+
+  // Populate event dropdown
+  const eventSelect = document.getElementById('itemEvent');
+  eventSelect.innerHTML = '<option value="">Select an event...</option>';
+  state.events.forEach(ev => {
+    const option = document.createElement('option');
+    option.value = ev.id;
+    option.textContent = ev.title;
+    if (item?.event_id === ev.id) {
+      option.selected = true;
+    }
+    eventSelect.appendChild(option);
+  });
+
   itemTitleInput.value = item?.title ?? '';
   itemTimeInput.value = item?.time ?? '';
   itemDescriptionInput.value = item?.description ?? '';
@@ -716,9 +740,16 @@ function openItemDialog(item, dateStr) {
 
   itemForm.onsubmit = async (e) => {
     e.preventDefault();
+    const selectedEventId = parseInt(eventSelect.value);
+
+    if (!selectedEventId) {
+      alert('Please select an event');
+      return;
+    }
+
     if (!item?.id) {
       await api.post('/api/items', {
-        event_id: item.event_id,
+        event_id: selectedEventId,
         date: currentEditItemDate,
         title: itemTitleInput.value,
         time: itemTimeInput.value || null,
@@ -737,12 +768,25 @@ function openItemDialog(item, dateStr) {
     }
 
     itemDialog.close();
-    await loadItemsForEvent(item.event_id);
+    await loadItemsForEvent(selectedEventId);
     paintCalendarSelections();
     renderItemsPanel();
+    renderDayItemsPanel();
   };
 
   itemDialog.showModal();
+}
+
+// Add event listener for the "Add Item" button
+const addItemBtn = document.getElementById('addItemBtn');
+if (addItemBtn) {
+  addItemBtn.addEventListener('click', () => {
+    if (state.dayItemsDate) {
+      openItemDialog(null, state.dayItemsDate);
+    } else {
+      alert('Please select a date first');
+    }
+  });
 }
 
 addEventBtn.addEventListener('click', () => openEventDialog(null));
