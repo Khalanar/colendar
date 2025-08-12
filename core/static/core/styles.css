@@ -307,8 +307,8 @@ body {
 .cell .date { position: absolute; top: 2px; right: 4px; font-size: 10px; color: var(--muted); z-index: 2; }
 .cell.date-light .date { color: #f8fafc; }
 .cell.date-dark .date { color: #0b0f1a; }
-.cell .splits { position: absolute; inset: 0; display: flex; z-index: 1; pointer-events: none; }
-.cell .splits .split { height: 100%; }
+.cell .splits { position: absolute; inset: 0; z-index: 1; pointer-events: none; }
+.cell .splits .split { position: absolute; }
 .cell .empty { position: absolute; inset: 0; display: grid; place-items: center; color: #334155; font-size: 10px; }
 .cell.draw-hover {
   outline: 2px solid var(--draw-border, #7c5cff);

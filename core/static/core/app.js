@@ -454,7 +454,6 @@ function paintCalendarSelections() {
     const dateStr = cell.dataset.date; const splits = cell.querySelector('.splits');
     if (!splits) return; splits.innerHTML = ''; if (!dateStr) return;
 
-    // All highlighted events that have items on this date
     const highlighted = state.events.filter(e => state.highlightEventIds.has(e.id));
     const eventsWithItems = [];
     for (const ev of highlighted) {
@@ -465,15 +464,30 @@ function paintCalendarSelections() {
     if (eventsWithItems.length > 0) {
       cell.classList.add('colored');
       cell.classList.remove('date-light','date-dark');
-      const widthPercent = 100 / eventsWithItems.length;
-      // Build splits and use the rightmost split's color for contrast
+
+      // Use 2x2 grid for up to 4 events; ignore extras
+      const maxShown = 4;
+      const shown = eventsWithItems.slice(0, maxShown);
+      const positions = [
+        { left: 0, top: 0 },
+        { left: 50, top: 0 },
+        { left: 0, top: 50 },
+        { left: 50, top: 50 },
+      ];
       let lastColor = null;
-      for (const ev of eventsWithItems) {
-        const split = document.createElement('div');
-        split.className = 'split'; split.style.width = `${widthPercent}%`; split.style.background = ev.color;
-        splits.appendChild(split);
+      shown.forEach((ev, idx) => {
+        const seg = document.createElement('div');
+        seg.className = 'split';
+        seg.style.position = 'absolute';
+        seg.style.left = positions[idx].left + '%';
+        seg.style.top = positions[idx].top + '%';
+        seg.style.width = '50%';
+        seg.style.height = '50%';
+        seg.style.background = ev.color;
+        splits.appendChild(seg);
         lastColor = ev.color || lastColor;
-      }
+      });
+
       const rgb = hexToRgb(lastColor);
       const lum = rgb ? relativeLuminance(rgb) : 0.5;
       if (lum < 0.5) cell.classList.add('date-light'); else cell.classList.add('date-dark');
