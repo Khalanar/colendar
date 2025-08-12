@@ -625,7 +625,14 @@ function renderEventsList() {
     actions.className = 'event-actions';
 
     const viewBtn = document.createElement('button');
-    viewBtn.textContent = 'View';
+    viewBtn.className = 'icon-btn';
+    viewBtn.setAttribute('aria-label', 'View');
+    viewBtn.setAttribute('title', 'View');
+    viewBtn.innerHTML = `
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M12 5c5.05 0 9.27 3.11 10.92 7.5C21.27 16.89 17.05 20 12 20S2.73 16.89 1.08 12.5C2.73 8.11 6.95 5 12 5zm0 2C7.9 7 4.31 9.39 3 12.5 4.31 15.61 7.9 18 12 18s7.69-2.39 9-5.5C19.69 9.39 16.1 7 12 7zm0 2.5a3 3 0 1 1 0 6 3 3 0 0 1 0-6z"/>
+      </svg>
+    `;
     viewBtn.addEventListener('click', (e) => {
       e.stopPropagation();
       window.open(`/events/${ev.id}/`, '_blank');

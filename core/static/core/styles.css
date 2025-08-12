@@ -826,3 +826,20 @@ menu button:active {
   color: #10b981; /* Green color for active drawing state */
   border-color: #10b981;
 }
+
+.icon-btn {
+  appearance: none;
+  background: linear-gradient(180deg, rgba(255,255,255,0.06), rgba(0,0,0,0.06));
+  border: 1px solid var(--border);
+  color: var(--text-primary);
+  padding: 6px 8px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background .12s ease, border-color .12s ease, box-shadow .12s ease, transform .12s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.icon-btn:hover { background: linear-gradient(180deg, rgba(255,255,255,0.08), rgba(0,0,0,0.08)); border-color: color-mix(in oklab, var(--accent) 40%, var(--border) 60%); box-shadow: 0 0 0 3px var(--ring); }
+.icon-btn:active { transform: translateY(1px); }
+.icon-btn svg { width: 16px; height: 16px; fill: currentColor; display: block; }
