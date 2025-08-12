@@ -807,48 +807,13 @@ menu button:active {
   }
 }
 
-/* Draw text sliding animation */
-.draw-text {
-  position: absolute;
-  right: -100px; /* Start completely off-screen to the right */
-  top: 50%;
-  transform: translateY(-50%);
-  color: var(--accent);
-  font-weight: 500;
-  cursor: pointer;
-  transition: right 0.3s ease;
-  white-space: nowrap;
-  z-index: 10;
-  background: var(--panel);
-  border: 1px solid var(--border);
-  border-radius: 6px;
-  padding: 4px 8px; /* Smaller padding to match edit/delete buttons */
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-  font-size: 12px; /* Same font size as edit/delete buttons */
-}
-
-.draw-text:hover {
-  color: color-mix(in oklab, var(--accent) 90%, white);
-  border-color: var(--accent);
-}
-
-/* Show draw text on event row hover (only when not in drawing mode) */
-.event-row:hover .draw-text:not(.drawing) {
-  right: 8px; /* Slide in from the right edge */
-}
-
-/* Keep draw text visible when in drawing mode */
-.event-row .draw-text.drawing {
-  right: 8px;
-  color: #10b981; /* Green color for active drawing state */
-  border-color: #10b981;
-}
+.draw-btn.active { color: #10b981; border-color: #10b981; }
 
 /* Make the eye/view button slide in with draw-text */
 .event-actions {
   opacity: 0;
-  transform: translateX(12px);
-  transition: opacity 0.2s ease, transform 0.2s ease;
+  transform: translateX(8px);
+  transition: opacity 0.15s ease, transform 0.15s ease;
 }
 .event-row:hover .event-actions,
 .event-row.drawing-active .event-actions {

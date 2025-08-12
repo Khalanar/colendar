@@ -589,30 +589,7 @@ function renderEventsList() {
     li.className = 'event-row';
     li.setAttribute('data-event-id', ev.id);
 
-    // Add sliding draw text as first child
-    const drawText = document.createElement('span');
-    drawText.className = 'draw-text';
-    if (state.drawEventId === ev.id) {
-      drawText.textContent = 'Drawing';
-      drawText.classList.add('drawing');
-    } else {
-      drawText.textContent = 'Draw';
-    }
-    drawText.addEventListener('click', async (e) => {
-      e.stopPropagation();
-      if (state.drawEventId === ev.id) {
-        // Clear draw mode for this event
-        state.drawEventId = null;
-      } else {
-        // Set this event as draw mode (this will clear any existing draw mode)
-        state.drawEventId = ev.id;
-      }
-
-      // Re-render the events list to ensure all drawing states are properly updated
-      renderEventsList();
-      await loadItemsForEvent(ev.id);
-      paintCalendarSelections();
-    });
+    // No left sliding draw label; actions live on the right
 
     const color = document.createElement('div');
     color.className = 'event-color';
@@ -641,9 +618,26 @@ function renderEventsList() {
       window.open(`/events/${ev.id}/`, '_blank');
     });
 
-    actions.appendChild(viewBtn);
+    const drawBtn = document.createElement('button');
+    drawBtn.className = 'icon-btn draw-btn';
+    drawBtn.textContent = state.drawEventId === ev.id ? 'Drawing' : 'Draw';
+    if (state.drawEventId === ev.id) drawBtn.classList.add('active');
+    drawBtn.addEventListener('click', async (e) => {
+      e.stopPropagation();
+      if (state.drawEventId === ev.id) {
+        state.drawEventId = null;
+      } else {
+        state.drawEventId = ev.id;
+      }
+      renderEventsList();
+      await loadItemsForEvent(ev.id);
+      paintCalendarSelections();
+    });
 
-    li.appendChild(drawText);
+    // Order: eye then Draw
+    actions.appendChild(viewBtn);
+    actions.appendChild(drawBtn);
+
     li.appendChild(color);
     li.appendChild(title);
     li.appendChild(actions);
@@ -661,7 +655,6 @@ function renderEventsList() {
     // Set initial state for events in drawing mode
     if (state.drawEventId === ev.id) {
       li.classList.add('drawing-active');
-      drawText.classList.add('drawing');
     }
 
     // Add handlers to mirror thumb behavior
