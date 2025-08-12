@@ -231,10 +231,37 @@ body {
 /* Events list container spacing */
 #eventsList {
   list-style: none;
-  padding: 20px;
+  padding: 0;
   margin: 0;
   overflow-y: auto;
   max-height: 100%;
+}
+
+/* Event row styling */
+.event-row {
+  position: relative;
+  transition: background .12s ease, transform .08s ease, padding-left .3s ease;
+  padding-left: 20px; /* Add 20px left padding to each event row */
+}
+
+.event-row:hover {
+  background: var(--bg-hover);
+}
+
+/* Add padding when hovering (for non-drawing events) */
+.event-row:hover:not(.drawing-active) {
+  padding-left: 80px;
+}
+
+/* Add padding when in drawing mode */
+.event-row.drawing-active {
+  padding-left: 80px;
+}
+
+/* Ensure event actions don't interfere with draw text */
+.event-actions {
+  position: relative;
+  z-index: 5;
 }
 
 /* Items cards */
@@ -723,31 +750,4 @@ menu button:active {
   left: 8px;
   color: #10b981; /* Green color for active drawing state */
   border-color: #10b981;
-}
-
-/* Ensure event row has relative positioning for absolute draw text */
-.event-row {
-  position: relative;
-  transition: background .12s ease, transform .08s ease, padding-left .3s ease;
-  padding-left: 0; /* Start with no left padding */
-}
-
-.event-row:hover {
-  background: var(--bg-hover);
-}
-
-/* Add padding when hovering (for non-drawing events) */
-.event-row:hover:not(.drawing-active) {
-  padding-left: 80px;
-}
-
-/* Add padding when in drawing mode */
-.event-row.drawing-active {
-  padding-left: 80px;
-}
-
-/* Ensure event actions don't interfere with draw text */
-.event-actions {
-  position: relative;
-  z-index: 5;
 }
