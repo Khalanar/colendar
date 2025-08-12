@@ -635,12 +635,8 @@ function renderSelectedEventThumbs() {
         toggleEventHighlight(ev.id);
       });
 
-      // Double-click: edit color via color picker
-      t.addEventListener('dblclick', async (e) => {
-        e.preventDefault();
-        e.stopPropagation();
-        openColorPopover(ev.id, ev.color, t);
-      });
+      // Double-click: do NOT open color editor on header thumbnails per UX
+      // (row `.event-color` squares handle editing instead)
 
       // Right-click: set this event as the active drawing event
       t.addEventListener('contextmenu', async (e) => {
@@ -790,7 +786,7 @@ async function pickAndSaveColor(eventId, currentColor) {
 }
 
 // Custom color popover with Save/Cancel; anchored to an element
-function openColorPopover(eventId, currentColor, anchorEl) {
+function openColorPopover(eventId, currentColor, anchorEl, autoOpen = true) {
   const rect = anchorEl.getBoundingClientRect();
   const evIndex = state.events.findIndex(e => e.id === eventId);
   const originalColor = evIndex >= 0 ? state.events[evIndex].color : (currentColor || '#666666');
@@ -883,6 +879,7 @@ function openColorPopover(eventId, currentColor, anchorEl) {
 
   // Focus for keyboard support
   picker.focus();
+  if (autoOpen) picker.click();
   document.addEventListener('keydown', onKey);
   document.addEventListener('mousedown', onOutside);
 }
@@ -1020,7 +1017,8 @@ function renderEventsList() {
     color.addEventListener('dblclick', async (e) => {
       e.preventDefault();
       e.stopPropagation();
-      openColorPopover(ev.id, ev.color, color);
+      // Open popover and immediately open native picker
+      openColorPopover(ev.id, ev.color, color, true);
     });
     color.addEventListener('mouseenter', (e) => {
       const html = `<strong>${escapeHtml(ev.title || 'Event')}</strong>`;
