@@ -517,6 +517,16 @@ function toggleEventHighlight(eventId) {
   renderSelectedEventThumbs();
   loadItemsForEvent(eventId);
   paintCalendarSelections();
+
+  // Update the visual state of the event row
+  const eventRow = document.querySelector(`[data-event-id="${eventId}"]`);
+  if (eventRow) {
+    if (state.highlightEventIds.has(eventId)) {
+      eventRow.classList.add('viewing');
+    } else {
+      eventRow.classList.remove('viewing');
+    }
+  }
 }
 
 function saveHighlightState() {
@@ -543,7 +553,7 @@ function renderEventsList() {
   state.events.forEach(ev => {
     const li = document.createElement('li');
     li.className = 'event-row';
-    li.addEventListener('click', () => toggleEventHighlight(ev.id));
+    li.setAttribute('data-event-id', ev.id);
 
     // Add sliding draw text as first child
     const drawText = document.createElement('span');
@@ -582,36 +592,29 @@ function renderEventsList() {
     const actions = document.createElement('div');
     actions.className = 'event-actions';
 
-      const viewBtn = document.createElement('button');
-  viewBtn.textContent = 'View';
-  viewBtn.addEventListener('click', (e) => {
-    e.stopPropagation();
-    window.open(`/events/${ev.id}/`, '_blank');
-  });
+    const viewBtn = document.createElement('button');
+    viewBtn.textContent = 'View';
+    viewBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      window.open(`/events/${ev.id}/`, '_blank');
+    });
 
-  actions.appendChild(viewBtn);
+    actions.appendChild(viewBtn);
 
     li.appendChild(drawText);
     li.appendChild(color);
     li.appendChild(title);
     li.appendChild(actions);
 
+    // Single click handler for the event row
     li.addEventListener('click', async () => {
-      if (state.highlightEventIds.has(ev.id)) {
-        state.highlightEventIds.delete(ev.id);
-      } else {
-        state.highlightEventIds.add(ev.id);
-        await loadItemsForEvent(ev.id);
-      }
-      state.viewingEventId = ev.id;
-      highlightViewingEvent();
-      paintCalendarSelections();
-      renderItemsPanel();
-      renderSelectedEventThumbs();
-      saveHighlightState();
+      toggleEventHighlight(ev.id);
     });
 
-    if (state.highlightEventIds.has(ev.id)) li.classList.add('viewing');
+    // Set visual state based on highlight status
+    if (state.highlightEventIds.has(ev.id)) {
+      li.classList.add('viewing');
+    }
 
     // Set initial state for events in drawing mode
     if (state.drawEventId === ev.id) {
