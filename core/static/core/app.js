@@ -248,14 +248,16 @@ function renderDayItemsPanel() {
     dayItemsListEl.appendChild(row);
   }
 
-  // Add "Add Item" button at the bottom
-  const addItemBtn = document.createElement('button');
-  addItemBtn.className = 'add-item-btn';
-  addItemBtn.innerHTML = '＋ Add Item';
-  addItemBtn.addEventListener('click', () => {
+  // Add "Add Item" link at the bottom
+  const addItemLink = document.createElement('a');
+  addItemLink.className = 'add-item-link';
+  addItemLink.innerHTML = '＋ Add Item';
+  addItemLink.href = '#';
+  addItemLink.addEventListener('click', (e) => {
+    e.preventDefault();
     openItemDialog(null, state.dayItemsDate);
   });
-  dayItemsListEl.appendChild(addItemBtn);
+  dayItemsListEl.appendChild(addItemLink);
 
   // highlight the active cell
   document.querySelectorAll('.cell.day-active').forEach(el => el.classList.remove('day-active'));

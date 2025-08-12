@@ -239,31 +239,24 @@ body {
 .item .actions { display: flex; gap: 6px; margin-left: auto; }
 .empty-day { color: var(--muted); font-size: 12px; padding: 12px; text-align: center; }
 
-/* Add Item button */
-.add-item-btn {
-  appearance: none;
-  background: linear-gradient(180deg, rgba(255,255,255,0.06), rgba(0,0,0,0.06));
-  color: var(--text-primary);
-  border: 1px solid var(--border);
+/* Add Item link */
+.add-item-link {
+  display: block;
+  color: var(--accent);
+  text-decoration: none;
   padding: 12px 16px;
   border-radius: 8px;
   cursor: pointer;
-  transition: background .12s ease, border-color .12s ease, box-shadow .12s ease, transform .12s ease;
+  transition: background .12s ease, color .12s ease;
   font-size: 14px;
   font-weight: 500;
   margin-top: 8px;
-  width: 100%;
   text-align: center;
 }
 
-.add-item-btn:hover {
-  background: linear-gradient(180deg, rgba(255,255,255,0.08), rgba(0,0,0,0.08));
-  border-color: color-mix(in oklab, var(--accent) 40%, var(--border) 60%);
-  box-shadow: 0 0 0 3px var(--ring);
-}
-
-.add-item-btn:active {
-  transform: translateY(1px);
+.add-item-link:hover {
+  background: rgba(99, 102, 241, 0.1);
+  color: color-mix(in oklab, var(--accent) 90%, white);
 }
 
 /* Collapse behavior for items panel */
