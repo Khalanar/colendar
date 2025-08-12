@@ -87,6 +87,9 @@ body {
   box-sizing: border-box;
 }
 
+/* Keep natural casing for the day panel date (e.g., 12th Aug) */
+.day-panel .panel-header h2 { text-transform: none; }
+
 /* Prevent wrapping to keep height consistent */
 .panel-header h2 { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; line-height: 20px; }
 .panel-header .title-with-thumbs { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
