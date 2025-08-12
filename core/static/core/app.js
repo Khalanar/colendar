@@ -522,6 +522,12 @@ function renderSelectedEventThumbs() {
       t.setAttribute('aria-label', ev.title || 'Event');
       t.setAttribute('role', 'img');
 
+      // If this is the HEADER container and this event is the active drawing event, add underline indicator
+      if (container === eventsThumbsEl && state.drawEventId === ev.id) {
+        t.classList.add('drawing');
+        t.style.setProperty('--draw-color', ev.color || '#666');
+      }
+
       // Add click handler to toggle event
       t.addEventListener('click', (e) => {
         e.stopPropagation();

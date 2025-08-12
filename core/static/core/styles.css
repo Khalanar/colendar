@@ -857,3 +857,32 @@ menu button:active {
 
 /* Prevent pointer cursor on interactive children like thumbnails */
 .panel-header .selected-thumbs, .panel-header .selected-thumbs * { cursor: default; }
+
+/* Header selected-thumbs thumbs drawing underline */
+.panel-header .selected-thumbs .thumb.drawing {
+  position: relative;
+}
+.panel-header .selected-thumbs .thumb.drawing::after {
+  content: '';
+  position: absolute;
+  left: 2px;
+  right: 2px;
+  bottom: -4px;
+  height: 2px;
+  background: var(--draw-color, var(--accent));
+  border-radius: 1px;
+}
+
+/* Event row left bar when drawing active */
+.event-row.drawing-active {
+  position: relative;
+}
+.event-row.drawing-active::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 5px;
+  height: 100%;
+  background: var(--evcolor, var(--accent));
+}
