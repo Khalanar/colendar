@@ -95,13 +95,32 @@ import dj_database_url
 
 # Get DATABASE_URL from environment, with fallback to SQLite
 database_url = os.environ.get('DATABASE_URL')
-if database_url and database_url.startswith('postgres://'):
-    # Fix for Render's postgres:// URLs (should be postgresql://)
-    database_url = database_url.replace('postgres://', 'postgresql://', 1)
+
+# Debug: Print the DATABASE_URL (remove in production)
+if database_url:
+    print(f"DATABASE_URL found: {database_url[:50]}...")  # Only show first 50 chars for security
+else:
+    print("No DATABASE_URL found, using SQLite")
+
+# Validate and fix DATABASE_URL
+if database_url:
+    if database_url.startswith('https://'):
+        print("ERROR: DATABASE_URL is an HTTPS URL, not a database connection string")
+        print("Please set DATABASE_URL to the PostgreSQL connection string from your Render database")
+        database_url = None
+    elif database_url.startswith('postgres://'):
+        # Fix for Render's postgres:// URLs (should be postgresql://)
+        database_url = database_url.replace('postgres://', 'postgresql://', 1)
+        print("Fixed postgres:// to postgresql://")
+
+# Use SQLite if no valid DATABASE_URL
+if not database_url:
+    database_url = 'sqlite:///' + str(BASE_DIR / 'db.sqlite3')
+    print("Using SQLite database")
 
 DATABASES = {
     'default': dj_database_url.config(
-        default=database_url or 'sqlite:///' + str(BASE_DIR / 'db.sqlite3'),
+        default=database_url,
         conn_max_age=600
     )
 }
