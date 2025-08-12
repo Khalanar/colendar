@@ -473,21 +473,33 @@ async function loadItemsForEvent(eventId) {
 
 function renderSelectedEventThumbs() {
   const containers = [selectedThumbsEl, eventsThumbsEl];
-  const selected = state.events.filter(e => state.highlightEventIds.has(e.id));
+
   containers.forEach(container => {
     if (!container) return;
     container.innerHTML = '';
-    selected.forEach(ev => {
+
+    // Show all events, not just selected ones
+    state.events.forEach(ev => {
+      const isHighlighted = state.highlightEventIds.has(ev.id);
       const t = document.createElement('span');
       t.className = 'thumb';
-      t.style.background = ev.color || '#475569';
+      t.style.background = isHighlighted ? (ev.color || '#475569') : 'transparent';
+      t.style.border = '2px solid #666';
+      t.style.cursor = 'pointer';
       t.setAttribute('aria-label', ev.title || 'Event');
       t.setAttribute('role', 'img');
+
+      // Add click handler to toggle event
+      t.addEventListener('click', () => {
+        toggleEventHighlight(ev.id);
+      });
+
       t.addEventListener('mouseenter', (e) => {
         const html = `<strong>${escapeHtml(ev.title || 'Event')}</strong>`;
         showTooltip(html, e.clientX, e.clientY);
       });
       t.addEventListener('mouseleave', hideTooltip);
+
       container.appendChild(t);
     });
   });
