@@ -466,10 +466,11 @@ def import_data(request):
             elif line.startswith('- Title:') and current_event:
                 # Parse item line
                 item_data = {}
-                # Find the position after "- Title: " to get the rest of the line
-                title_start = line.find('Title:') + 6  # Length of "Title:"
-                parts = line[title_start:].split(' | ')
+                # Remove the "- Title: " prefix and split by " | "
+                item_content = line[9:]  # Remove "- Title: "
+                parts = item_content.split(' | ')
                 print(f"Debug: Parsing line: '{line}'")
+                print(f"Debug: Item content: '{item_content}'")
                 print(f"Debug: Parts: {parts}")
 
                 for part in parts:
@@ -484,6 +485,7 @@ def import_data(request):
                             try:
                                 item_data['date'] = datetime.strptime(value, '%Y-%m-%d').date()
                             except ValueError:
+                                print(f"Debug: Invalid date format: {value}")
                                 continue
                         elif key == 'time':
                             item_data['time'] = value
@@ -492,8 +494,12 @@ def import_data(request):
                         elif key == 'notes':
                             item_data['notes'] = value
 
+                print(f"Debug: Parsed item_data: {item_data}")
                 if 'title' in item_data and 'date' in item_data:
                     current_items.append(item_data)
+                    print(f"Debug: Added item to current_items. Total: {len(current_items)}")
+                else:
+                    print(f"Debug: Skipping item - missing title or date")
 
         # Save the last event
         if current_event:

@@ -556,31 +556,14 @@ function renderEventsList() {
     const actions = document.createElement('div');
     actions.className = 'event-actions';
 
-    const editBtn = document.createElement('button');
-    editBtn.textContent = 'Edit';
-    editBtn.addEventListener('click', async (e) => {
-      e.stopPropagation();
-      openEventDialog(ev);
-    });
+      const viewBtn = document.createElement('button');
+  viewBtn.textContent = 'View';
+  viewBtn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    window.open(`/events/${ev.id}/`, '_blank');
+  });
 
-    const viewBtn = document.createElement('button');
-    viewBtn.textContent = 'View';
-    viewBtn.addEventListener('click', (e) => {
-      e.stopPropagation();
-      window.open(`/events/${ev.id}/`, '_blank');
-    });
-
-    const delBtn = document.createElement('button');
-    delBtn.textContent = 'Delete';
-    delBtn.addEventListener('click', async (e) => {
-      e.stopPropagation();
-      await api.del(`/api/events/${ev.id}`);
-      window.location.reload();
-    });
-
-    actions.appendChild(editBtn);
-    actions.appendChild(viewBtn);
-    actions.appendChild(delBtn);
+  actions.appendChild(viewBtn);
 
     li.appendChild(drawText);
     li.appendChild(color);
