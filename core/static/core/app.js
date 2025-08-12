@@ -680,53 +680,67 @@ async function pickAndSaveColor(eventId, currentColor) {
   const evIndex = state.events.findIndex(e => e.id === eventId);
   const originalColor = evIndex >= 0 ? state.events[evIndex].color : (currentColor || '#666666');
   let committed = false;
+  let lastPreview = originalColor;
 
-  // Live preview as the user drags in the picker
-  const onInput = (e) => {
-    const preview = e.target.value;
+  function applyPreview(color) {
     if (evIndex >= 0) {
-      state.events[evIndex].color = preview;
-      // refresh minimal UI reflecting color
+      state.events[evIndex].color = color;
       renderSelectedEventThumbs();
       renderEventsList();
       paintCalendarSelections();
     }
-  };
+  }
 
-  // Commit on change (dialog closed with OK / Enter)
-  const onChange = async (e) => {
+  async function commit(color) {
     committed = true;
-    const newColor = e.target.value;
     try {
-      await api.patch(`/api/events/${eventId}`, { color: newColor });
+      await api.patch(`/api/events/${eventId}`, { color });
       await refreshEvents();
       paintCalendarSelections();
     } catch (err) {
       console.error('Failed to update color', err);
       // revert on failure
-      if (evIndex >= 0) state.events[evIndex].color = originalColor;
-      renderSelectedEventThumbs();
-      renderEventsList();
-      paintCalendarSelections();
+      applyPreview(originalColor);
     } finally {
       cleanup();
+    }
+  }
+
+  function revert() {
+    applyPreview(originalColor);
+    cleanup();
+  }
+
+  // Live preview as the user drags in the picker
+  const onInput = (e) => {
+    lastPreview = e.target.value;
+    applyPreview(lastPreview);
+  };
+
+  // Commit on change (dialog closed with OK / Enter in some UIs)
+  const onChange = async (e) => {
+    await commit(e.target.value);
+  };
+
+  const onKeyDown = async (e) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      await commit(lastPreview);
+    } else if (e.key === 'Escape') {
+      e.preventDefault();
+      revert();
     }
   };
 
   const onBlur = () => {
-    // If user cancels (no change event), revert preview
-    if (!committed && evIndex >= 0) {
-      state.events[evIndex].color = originalColor;
-      renderSelectedEventThumbs();
-      renderEventsList();
-      paintCalendarSelections();
-    }
-    cleanup();
+    // If user cancels (no commit), revert preview
+    if (!committed) revert();
   };
 
   function cleanup() {
     input.removeEventListener('input', onInput);
     input.removeEventListener('change', onChange);
+    input.removeEventListener('keydown', onKeyDown);
     input.removeEventListener('blur', onBlur);
     input.remove();
   }
@@ -734,6 +748,7 @@ async function pickAndSaveColor(eventId, currentColor) {
   return new Promise((resolve) => {
     input.addEventListener('input', onInput);
     input.addEventListener('change', onChange, { once: true });
+    input.addEventListener('keydown', onKeyDown);
     input.addEventListener('blur', onBlur, { once: true });
     input.click();
     resolve();
