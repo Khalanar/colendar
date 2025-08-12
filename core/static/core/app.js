@@ -1,9 +1,38 @@
 const api = {
-  async get(path) { const r = await fetch(path); return r.json(); },
-  async post(path, body) { const r = await fetch(path, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) }); return r.json(); },
-  async patch(path, body) { const r = await fetch(path, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) }); return r.json(); },
-  async del(path) { await fetch(path, { method: 'DELETE' }); }
+  async get(path) { const r = await fetch(path); if (!r.ok) throw new Error(`GET ${path} ${r.status}`); return r.json(); },
+  async post(path, body) {
+    const r = await fetch(path, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'X-CSRFToken': getCsrfToken() },
+      body: JSON.stringify(body)
+    });
+    if (!r.ok) throw new Error(`POST ${path} ${r.status}`);
+    return r.json();
+  },
+  async patch(path, body) {
+    const r = await fetch(path, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json', 'X-CSRFToken': getCsrfToken() },
+      body: JSON.stringify(body)
+    });
+    if (!r.ok) throw new Error(`PATCH ${path} ${r.status}`);
+    return r.json();
+  },
+  async del(path) {
+    const r = await fetch(path, { method: 'DELETE', headers: { 'X-CSRFToken': getCsrfToken() } });
+    if (!r.ok && r.status !== 204) throw new Error(`DELETE ${path} ${r.status}`);
+  }
 };
+
+function getCsrfToken() {
+  const name = 'csrftoken=';
+  const parts = document.cookie ? document.cookie.split(';') : [];
+  for (let c of parts) {
+    c = c.trim();
+    if (c.startsWith(name)) return decodeURIComponent(c.slice(name.length));
+  }
+  return '';
+}
 
 let state = {
   year: new Date().getFullYear(),
