@@ -534,11 +534,13 @@ function renderEventsList() {
         state.drawEventId = null; // Clear draw mode
         drawText.textContent = 'Draw';
         drawText.classList.remove('drawing');
+        li.style.paddingLeft = '0px'; // Remove padding when not drawing
       } else {
         state.drawEventId = null; // Clear any existing draw mode
         state.drawEventId = ev.id; // Set this event as draw mode
         drawText.textContent = 'Drawing';
         drawText.classList.add('drawing');
+        li.style.paddingLeft = '80px'; // Add padding when drawing
       }
       await loadItemsForEvent(ev.id);
       paintCalendarSelections();
@@ -595,6 +597,11 @@ function renderEventsList() {
     });
 
     if (state.highlightEventIds.has(ev.id)) li.classList.add('viewing');
+
+    // Set initial padding for events in drawing mode
+    if (state.drawEventId === ev.id) {
+      li.style.paddingLeft = '80px';
+    }
 
     eventsListEl.appendChild(li);
   });

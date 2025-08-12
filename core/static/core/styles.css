@@ -685,7 +685,7 @@ menu button:active {
 /* Draw text sliding animation */
 .draw-text {
   position: absolute;
-  left: -60px; /* Start off-screen to the left */
+  left: -80px; /* Start completely off-screen */
   top: 50%;
   transform: translateY(-50%);
   color: var(--accent);
@@ -697,8 +697,9 @@ menu button:active {
   background: var(--panel);
   border: 1px solid var(--border);
   border-radius: 6px;
-  padding: 6px 12px;
+  padding: 4px 8px; /* Smaller padding to match edit/delete buttons */
   box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  font-size: 12px; /* Same font size as edit/delete buttons */
 }
 
 .draw-text:hover {
@@ -721,11 +722,22 @@ menu button:active {
 /* Ensure event row has relative positioning for absolute draw text */
 .event-row {
   position: relative;
-  transition: background .12s ease, transform .08s ease;
+  transition: background .12s ease, transform .08s ease, padding-left .3s ease;
+  padding-left: 0; /* Start with no left padding */
 }
 
 .event-row:hover {
   background: var(--bg-hover);
+  padding-left: 80px; /* Push content to the right when draw text appears */
+}
+
+/* Keep content pushed when in drawing mode */
+.event-row .draw-text.drawing {
+  left: 8px;
+}
+
+.event-row .draw-text.drawing ~ * {
+  /* This will be handled by the padding-left on the parent */
 }
 
 /* Ensure event actions don't interfere with draw text */
