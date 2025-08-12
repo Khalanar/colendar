@@ -305,7 +305,20 @@ body {
 .items-panel.collapsed #itemsList { display: none; }
 
 /* Tooltip: opaque background */
-.tooltip { position: fixed; z-index: 50; max-width: 320px; background: #0f1623; color: var(--text-primary); border: 1px solid var(--border); border-radius: 6px; padding: 10px; box-shadow: 0 8px 24px rgba(0,0,0,0.45); pointer-events: none; font-size: 12px; }
+.tooltip {
+  position: fixed;
+  z-index: 50;
+  max-width: 320px;
+  background: #0f1623;
+  color: var(--text-primary);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 10px;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.45);
+  pointer-events: none;
+  font-size: 12px;
+  white-space: nowrap;
+}
 .tooltip h4 { margin: 0 0 6px; font-size: 12px; color: var(--muted); }
 .tooltip .tip-item { margin-bottom: 6px; }
 .tooltip .tip-item:last-child { margin-bottom: 0; }

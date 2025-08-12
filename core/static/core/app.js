@@ -61,10 +61,19 @@ tooltipEl.className = 'tooltip';
 tooltipEl.style.display = 'none';
 document.body.appendChild(tooltipEl);
 
-function showTooltip(html, x, y) {
+function showTooltip(html, x, y, position = 'below') {
   tooltipEl.innerHTML = html;
-  tooltipEl.style.left = Math.min(x + 12, window.innerWidth - 340) + 'px';
-  tooltipEl.style.top = Math.min(y + 12, window.innerHeight - 120) + 'px';
+
+  if (position === 'above') {
+    // Position above the element
+    tooltipEl.style.left = Math.min(x + 12, window.innerWidth - 340) + 'px';
+    tooltipEl.style.top = Math.max(y - 60, 10) + 'px';
+  } else {
+    // Default: position below the element
+    tooltipEl.style.left = Math.min(x + 12, window.innerWidth - 340) + 'px';
+    tooltipEl.style.top = Math.min(y + 12, window.innerHeight - 120) + 'px';
+  }
+
   tooltipEl.style.display = 'block';
 }
 function hideTooltip() { tooltipEl.style.display = 'none'; }
@@ -497,7 +506,7 @@ function renderSelectedEventThumbs() {
 
       t.addEventListener('mouseenter', (e) => {
         const html = `<strong>${escapeHtml(ev.title || 'Event')}</strong>`;
-        showTooltip(html, e.clientX, e.clientY);
+        showTooltip(html, e.clientX, e.clientY, 'above');
       });
       t.addEventListener('mouseleave', hideTooltip);
 
