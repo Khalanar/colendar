@@ -534,6 +534,17 @@ function renderSelectedEventThumbs() {
         toggleEventHighlight(ev.id);
       });
 
+      // Right-click: set this event as the active drawing event
+      t.addEventListener('contextmenu', async (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        state.drawEventId = ev.id;
+        renderEventsList();
+        renderSelectedEventThumbs();
+        await loadItemsForEvent(ev.id);
+        paintCalendarSelections();
+      });
+
       t.addEventListener('mouseenter', (e) => {
         const html = `<strong>${escapeHtml(ev.title || 'Event')}</strong>`;
         showTooltip(html, e.clientX, e.clientY, 'above');
