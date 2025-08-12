@@ -533,25 +533,13 @@ function renderEventsList() {
       if (state.drawEventId === ev.id) {
         // Clear draw mode for this event
         state.drawEventId = null;
-        drawText.textContent = 'Draw';
-        drawText.classList.remove('drawing');
-        li.classList.remove('drawing-active');
       } else {
-        // Clear any existing draw mode from other events first
-        if (state.drawEventId) {
-          // Find and update the previously drawing event
-          const prevDrawingEvent = state.events.find(e => e.id === state.drawEventId);
-          if (prevDrawingEvent) {
-            // This will be handled when we re-render the events list
-          }
-        }
-
-        // Set this event as draw mode
+        // Set this event as draw mode (this will clear any existing draw mode)
         state.drawEventId = ev.id;
-        drawText.textContent = 'Drawing';
-        drawText.classList.add('drawing');
-        li.classList.add('drawing-active');
       }
+
+      // Re-render the events list to ensure all drawing states are properly updated
+      renderEventsList();
       await loadItemsForEvent(ev.id);
       paintCalendarSelections();
     });
