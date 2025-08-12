@@ -764,7 +764,8 @@ async function refreshEvents() {
 }
 
 function applyItemsCollapsedState() {
-  const collapsed = localStorage.getItem('itemsCollapsed') === '1';
+  const stored = localStorage.getItem('itemsCollapsed');
+  const collapsed = stored === null ? true : stored === '1'; // Default to collapsed for new users
   itemsPanelEl.classList.toggle('collapsed', collapsed);
   if (toggleItemsBtn) toggleItemsBtn.textContent = collapsed ? '▸' : '▾';
 }

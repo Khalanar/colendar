@@ -71,36 +71,72 @@ def create_sample_data_for_user(user):
     # Create 2 random events
     selected_events = random.sample(event_titles, 2)
 
-    for event_title in selected_events:
-        event = Event.objects.create(
-            title=event_title,
-            color=get_random_color(),
-            user=user
-        )
+    today = date.today()
+    tomorrow = today + timedelta(days=1)
 
-        # Create 2-3 items for today and tomorrow
-        today = date.today()
-        tomorrow = today + timedelta(days=1)
+    # Get a random day this week (not today or tomorrow)
+    days_this_week = []
+    for i in range(7):
+        day = today + timedelta(days=i)
+        if day != today and day != tomorrow:
+            days_this_week.append(day)
+    other_day_this_week = random.choice(days_this_week)
 
-        for day in [today, tomorrow]:
-            num_items = random.randint(1, 2)  # 1-2 items per day
-            for _ in range(num_items):
-                item_title = random.choice(item_titles)
-                description = random.choice(descriptions)
+    # Event 1: Items today and tomorrow
+    event1 = Event.objects.create(
+        title=selected_events[0],
+        color=get_random_color(),
+        user=user
+    )
 
-                # Random time between 9 AM and 5 PM
-                hour = random.randint(9, 17)
-                minute = random.choice([0, 15, 30, 45])
-                time_str = f"{hour:02d}:{minute:02d}"
+    # Create items for event 1 (today and tomorrow)
+    for day in [today, tomorrow]:
+        num_items = random.randint(1, 2)  # 1-2 items per day
+        for _ in range(num_items):
+            item_title = random.choice(item_titles)
+            description = random.choice(descriptions)
 
-                EventItem.objects.create(
-                    event=event,
-                    title=item_title,
-                    time=time_str,
-                    description=description,
-                    notes="Sample item - feel free to edit or delete!",
-                    date=day
-                )
+            # Random time between 9 AM and 5 PM
+            hour = random.randint(9, 17)
+            minute = random.choice([0, 15, 30, 45])
+            time_str = f"{hour:02d}:{minute:02d}"
+
+            EventItem.objects.create(
+                event=event1,
+                title=item_title,
+                time=time_str,
+                description=description,
+                notes="Sample item - feel free to edit or delete!",
+                date=day
+            )
+
+    # Event 2: Items tomorrow and another day this week
+    event2 = Event.objects.create(
+        title=selected_events[1],
+        color=get_random_color(),
+        user=user
+    )
+
+    # Create items for event 2 (tomorrow and another day this week)
+    for day in [tomorrow, other_day_this_week]:
+        num_items = random.randint(1, 2)  # 1-2 items per day
+        for _ in range(num_items):
+            item_title = random.choice(item_titles)
+            description = random.choice(descriptions)
+
+            # Random time between 9 AM and 5 PM
+            hour = random.randint(9, 17)
+            minute = random.choice([0, 15, 30, 45])
+            time_str = f"{hour:02d}:{minute:02d}"
+
+            EventItem.objects.create(
+                event=event2,
+                title=item_title,
+                time=time_str,
+                description=description,
+                notes="Sample item - feel free to edit or delete!",
+                date=day
+            )
 
 
 @login_required
