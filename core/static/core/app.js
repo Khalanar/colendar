@@ -676,21 +676,67 @@ async function pickAndSaveColor(eventId, currentColor) {
   input.style.left = '-9999px';
   document.body.appendChild(input);
 
+  // Track original color and whether we saved
+  const evIndex = state.events.findIndex(e => e.id === eventId);
+  const originalColor = evIndex >= 0 ? state.events[evIndex].color : (currentColor || '#666666');
+  let committed = false;
+
+  // Live preview as the user drags in the picker
+  const onInput = (e) => {
+    const preview = e.target.value;
+    if (evIndex >= 0) {
+      state.events[evIndex].color = preview;
+      // refresh minimal UI reflecting color
+      renderSelectedEventThumbs();
+      renderEventsList();
+      paintCalendarSelections();
+    }
+  };
+
+  // Commit on change (dialog closed with OK / Enter)
+  const onChange = async (e) => {
+    committed = true;
+    const newColor = e.target.value;
+    try {
+      await api.patch(`/api/events/${eventId}`, { color: newColor });
+      await refreshEvents();
+      paintCalendarSelections();
+    } catch (err) {
+      console.error('Failed to update color', err);
+      // revert on failure
+      if (evIndex >= 0) state.events[evIndex].color = originalColor;
+      renderSelectedEventThumbs();
+      renderEventsList();
+      paintCalendarSelections();
+    } finally {
+      cleanup();
+    }
+  };
+
+  const onBlur = () => {
+    // If user cancels (no change event), revert preview
+    if (!committed && evIndex >= 0) {
+      state.events[evIndex].color = originalColor;
+      renderSelectedEventThumbs();
+      renderEventsList();
+      paintCalendarSelections();
+    }
+    cleanup();
+  };
+
+  function cleanup() {
+    input.removeEventListener('input', onInput);
+    input.removeEventListener('change', onChange);
+    input.removeEventListener('blur', onBlur);
+    input.remove();
+  }
+
   return new Promise((resolve) => {
-    input.addEventListener('change', async (e) => {
-      try {
-        const newColor = e.target.value;
-        await api.patch(`/api/events/${eventId}`, { color: newColor });
-        await refreshEvents();
-        paintCalendarSelections();
-      } catch (err) {
-        console.error('Failed to update color', err);
-      } finally {
-        input.remove();
-        resolve();
-      }
-    }, { once: true });
+    input.addEventListener('input', onInput);
+    input.addEventListener('change', onChange, { once: true });
+    input.addEventListener('blur', onBlur, { once: true });
     input.click();
+    resolve();
   });
 }
 
