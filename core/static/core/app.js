@@ -465,24 +465,42 @@ function paintCalendarSelections() {
       cell.classList.add('colored');
       cell.classList.remove('date-light','date-dark');
 
-      // Use 2x2 grid for up to 4 events; ignore extras
-      const maxShown = 4;
-      const shown = eventsWithItems.slice(0, maxShown);
-      const positions = [
-        { left: 0, top: 0 },
-        { left: 50, top: 0 },
-        { left: 0, top: 50 },
-        { left: 50, top: 50 },
-      ];
+      const count = Math.min(eventsWithItems.length, 4);
+      const shown = eventsWithItems.slice(0, count);
+      let positions = [];
+      if (count === 1) {
+        positions = [{ left: 0, top: 0, width: 100, height: 100 }];
+      } else if (count === 2) {
+        positions = [
+          { left: 0, top: 0, width: 50, height: 100 },
+          { left: 50, top: 0, width: 50, height: 100 },
+        ];
+      } else if (count === 3) {
+        positions = [
+          { left: 0, top: 0, width: 50, height: 50 },
+          { left: 50, top: 0, width: 50, height: 50 },
+          { left: 0, top: 50, width: 100, height: 50 },
+        ];
+      } else {
+        // 4 or more → 2x2; extras ignored
+        positions = [
+          { left: 0, top: 0, width: 50, height: 50 },
+          { left: 50, top: 0, width: 50, height: 50 },
+          { left: 0, top: 50, width: 50, height: 50 },
+          { left: 50, top: 50, width: 50, height: 50 },
+        ];
+      }
+
       let lastColor = null;
       shown.forEach((ev, idx) => {
+        const p = positions[idx];
         const seg = document.createElement('div');
         seg.className = 'split';
         seg.style.position = 'absolute';
-        seg.style.left = positions[idx].left + '%';
-        seg.style.top = positions[idx].top + '%';
-        seg.style.width = '50%';
-        seg.style.height = '50%';
+        seg.style.left = p.left + '%';
+        seg.style.top = p.top + '%';
+        seg.style.width = p.width + '%';
+        seg.style.height = p.height + '%';
         seg.style.background = ev.color;
         splits.appendChild(seg);
         lastColor = ev.color || lastColor;
