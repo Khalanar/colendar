@@ -861,3 +861,26 @@ menu button:active {
 .icon-btn:hover { background: linear-gradient(180deg, rgba(255,255,255,0.08), rgba(0,0,0,0.08)); border-color: color-mix(in oklab, var(--accent) 40%, var(--border) 60%); box-shadow: 0 0 0 3px var(--ring); }
 .icon-btn:active { transform: translateY(1px); }
 .icon-btn svg { width: 16px; height: 16px; fill: currentColor; display: block; }
+
+/* Simple, no-fill chevron used in panel headers */
+.chevron {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border-right: 2px solid var(--text-muted);
+  border-bottom: 2px solid var(--text-muted);
+  transform: rotate(45deg);
+  transition: transform 0.15s ease, border-color 0.15s ease;
+  margin-left: 8px;
+}
+.events-panel.collapsed .chevron,
+.items-panel.collapsed .chevron {
+  transform: rotate(-45deg);
+}
+
+/* Make entire header clickable without changing layout */
+.events-panel .panel-header,
+.items-panel .panel-header { cursor: pointer; }
+
+/* Prevent pointer cursor on interactive children like thumbnails */
+.panel-header .selected-thumbs, .panel-header .selected-thumbs * { cursor: default; }

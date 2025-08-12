@@ -27,9 +27,9 @@ const eventsListEl = document.getElementById('eventsList');
 const itemsListEl = document.getElementById('itemsList');
 const itemsCountEl = document.getElementById('itemsCount');
 const itemsPanelEl = document.querySelector('.items-panel');
-const toggleItemsBtn = document.getElementById('toggleItems');
+const itemsChevron = document.getElementById('itemsChevron');
 const eventsPanelEl = document.querySelector('.events-panel');
-const toggleEventsBtn = document.getElementById('toggleEvents');
+const eventsChevron = document.getElementById('eventsChevron');
 const dayPanelEl = document.getElementById('dayPanel');
 const dayPanelTitleEl = document.getElementById('dayPanelTitle');
 const dayItemsListEl = document.getElementById('dayItemsList');
@@ -992,34 +992,36 @@ function applyItemsCollapsedState() {
   const stored = localStorage.getItem('itemsCollapsed');
   const collapsed = stored === null ? true : stored === '1'; // Default to collapsed for new users
   itemsPanelEl.classList.toggle('collapsed', collapsed);
-  if (toggleItemsBtn) toggleItemsBtn.textContent = collapsed ? '▸' : '▾';
 }
 
 function setupItemsCollapse() {
   applyItemsCollapsedState();
-  if (!toggleItemsBtn) return;
-  toggleItemsBtn.addEventListener('click', () => {
+  const header = itemsPanelEl.querySelector('.panel-header');
+  if (!header) return;
+  header.addEventListener('click', (e) => {
+    // Ignore clicks on thumbnails or within selected-thumbs
+    if (e.target.closest('.selected-thumbs')) return;
     const collapsed = !itemsPanelEl.classList.contains('collapsed');
     itemsPanelEl.classList.toggle('collapsed', collapsed);
     localStorage.setItem('itemsCollapsed', collapsed ? '1' : '0');
-    toggleItemsBtn.textContent = collapsed ? '▸' : '▾';
   });
 }
 
 function applyEventsCollapsedState() {
   const collapsed = localStorage.getItem('eventsCollapsed') === '1';
   eventsPanelEl.classList.toggle('collapsed', collapsed);
-  if (toggleEventsBtn) toggleEventsBtn.textContent = collapsed ? '▸' : '▾';
 }
 
 function setupEventsCollapse() {
   applyEventsCollapsedState();
-  if (!toggleEventsBtn) return;
-  toggleEventsBtn.addEventListener('click', () => {
+  const header = eventsPanelEl.querySelector('.panel-header');
+  if (!header) return;
+  header.addEventListener('click', (e) => {
+    // Ignore clicks on thumbnails or within selected-thumbs
+    if (e.target.closest('.selected-thumbs')) return;
     const collapsed = !eventsPanelEl.classList.contains('collapsed');
     eventsPanelEl.classList.toggle('collapsed', collapsed);
     localStorage.setItem('eventsCollapsed', collapsed ? '1' : '0');
-    toggleEventsBtn.textContent = collapsed ? '▸' : '▾';
   });
 }
 
