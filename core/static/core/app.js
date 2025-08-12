@@ -35,7 +35,7 @@ const dayPanelTitleEl = document.getElementById('dayPanelTitle');
 const dayItemsListEl = document.getElementById('dayItemsList');
 const closeDayPanelBtn = document.getElementById('closeDayPanel');
 const todayBtn = document.getElementById('todayBtn') || document.getElementById('scrollToday');
-const addEventBtn = document.getElementById('addEventBtn');
+const addEventLink = document.getElementById('addEventLink');
 const selectedThumbsEl = null;
 const eventsThumbsEl = document.getElementById('eventsSelectedThumbs');
 
@@ -280,6 +280,9 @@ if (todayBtn) todayBtn.addEventListener('click', () => {
   const todayStr = toDateStr(now.getFullYear(), now.getMonth(), now.getDate());
   scrollToDate(todayStr);
 });
+if (addEventLink) {
+  addEventLink.addEventListener('click', (e) => { e.preventDefault(); openEventDialog(null); });
+}
 
 function ensureYearRendered(year, _unusedPrepend = false) {
   if (renderedYears.has(year)) return;
@@ -955,7 +958,6 @@ function openItemDialog(item, dateStr) {
 
 
 
-addEventBtn.addEventListener('click', () => openEventDialog(null));
 if (prevYearBtn) prevYearBtn.addEventListener('click', () => { state.year -= 1; ensureYearRendered(state.year); scrollToYear(state.year); });
 if (nextYearBtn) nextYearBtn.addEventListener('click', () => { state.year += 1; ensureYearRendered(state.year); scrollToYear(state.year); });
 
