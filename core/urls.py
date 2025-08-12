@@ -17,6 +17,8 @@ urlpatterns = [
     # Export/Import endpoints
     path('api/export/event/<int:event_id>', views.export_event, name='export_event'),
     path('api/import', views.import_data, name='import_data'),
+    # Maintenance endpoint to strip date suffixes from item titles
+    path('api/maintenance/strip-item-title-dates', views.strip_dates_from_item_titles, name='strip_item_title_dates'),
 
     path('accounts/', include('allauth.urls')),
 ]

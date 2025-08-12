@@ -511,3 +511,40 @@ def import_data(request):
 
     except Exception as e:
         return JsonResponse({'error': f'Import failed: {str(e)}'}, status=400)
+
+
+@login_required
+@csrf_exempt
+def strip_dates_from_item_titles(request):
+    """Strip trailing date patterns from item titles for the current user's items.
+    Patterns removed include:
+      - ' - 12th Aug, 2025'
+      - ' - 2025-08-12'
+      - ' 12th Aug, 2025'
+      - ' 2025-08-12'
+    Only trailing occurrences are removed to avoid damaging legitimate titles.
+    """
+    # Regex for common date suffixes at end, optional leading dash/space
+    patterns = [
+        r"\s*-\s*\d{4}-\d{2}-\d{2}$",              # ' - 2025-08-12'
+        r"\s*\d{4}-\d{2}-\d{2}$",                   # ' 2025-08-12'
+        r"\s*-\s*\d{1,2}(st|nd|rd|th)\s+[A-Za-z]{3},\s+\d{4}$",  # ' - 12th Aug, 2025'
+        r"\s*\d{1,2}(st|nd|rd|th)\s+[A-Za-z]{3},\s+\d{4}$",       # ' 12th Aug, 2025'
+    ]
+
+    compiled = [re.compile(p) for p in patterns]
+
+    items = EventItem.objects.filter(event__user=request.user)
+    changed = 0
+    for it in items:
+        original = it.title or ""
+        new = original
+        for rx in compiled:
+            new = rx.sub("", new)
+        new = new.strip()
+        if new != original:
+            it.title = new
+            it.save(update_fields=["title"])
+            changed += 1
+
+    return JsonResponse({"updated": changed})

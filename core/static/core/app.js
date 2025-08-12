@@ -790,7 +790,8 @@ function onCellClick(cell, dateStr) {
       });
     } else {
       const event = state.events.find(e => e.id === state.drawEventId);
-      const defaultTitle = `${event?.title || 'Event'} - ${formatDate(dateStr)}`;
+      // Default title no longer includes the date; just use the event title
+      const defaultTitle = `${event?.title || 'Event'}`;
 
       api.post('/api/items', {
         event_id: state.drawEventId,
@@ -1132,3 +1133,15 @@ function getRandomColor() {
   };
   return '#' + toHex(r) + toHex(g) + toHex(b);
 }
+
+// Global: ESC clears drawing mode
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') {
+    if (state.drawEventId) {
+      state.drawEventId = null;
+      renderEventsList();
+      renderSelectedEventThumbs();
+      paintCalendarSelections();
+    }
+  }
+});
