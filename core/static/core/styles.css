@@ -120,6 +120,7 @@ body {
   display: flex;
   align-items: center;
   gap: 8px;
+  height: 26px;
 }
 
 .panel-header .title-with-thumbs h2 {
