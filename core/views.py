@@ -166,9 +166,15 @@ def settings_view(request):
         # Handle settings updates
         username = request.POST.get('username')
         email = request.POST.get('email')
+        first_name = request.POST.get('first_name')
+        last_name = request.POST.get('last_name')
+
+        # Clear any existing messages
+        from django.contrib.messages import get_messages
+        list(get_messages(request))
 
         if username and username != request.user.username:
-            if User.objects.filter(username=username).exists():
+            if User.objects.filter(username=username).exclude(id=request.user.id).exists():
                 messages.error(request, 'Username already taken')
             else:
                 request.user.username = username
@@ -176,12 +182,25 @@ def settings_view(request):
                 messages.success(request, 'Username updated successfully')
 
         if email and email != request.user.email:
-            if User.objects.filter(email=email).exists():
+            if User.objects.filter(email=email).exclude(id=request.user.id).exists():
                 messages.error(request, 'Email already taken')
             else:
                 request.user.email = email
                 request.user.save()
                 messages.success(request, 'Email updated successfully')
+
+        if first_name != request.user.first_name:
+            request.user.first_name = first_name or ''
+            request.user.save()
+            messages.success(request, 'First name updated successfully')
+
+        if last_name != request.user.last_name:
+            request.user.last_name = last_name or ''
+            request.user.save()
+            messages.success(request, 'Last name updated successfully')
+
+        # Redirect to prevent form resubmission
+        return redirect('settings')
 
     return render(request, "core/settings.html")
 
