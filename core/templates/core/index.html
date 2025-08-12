@@ -1,0 +1,125 @@
+{% load static %}
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+    <meta http-equiv="Pragma" content="no-cache" />
+    <meta http-equiv="Expires" content="0" />
+    <title>Colendar</title>
+    <link rel="stylesheet" href="{% static 'core/styles.css' %}" />
+  </head>
+  <body>
+    <div id="app">
+      <header class="topbar">
+        <div class="topbar-left">
+          <h1>Colendar</h1>
+        </div>
+        <div class="topbar-right">
+          {% if user.is_authenticated %}
+            <div class="user-menu">
+              <span class="user-name">{{ user.username|default:user.email }}</span>
+              <div class="user-dropdown">
+                <a href="{% url 'settings' %}" class="dropdown-item">Settings</a>
+                <a href="{% url 'account_logout' %}" class="dropdown-item">Logout</a>
+              </div>
+            </div>
+          {% else %}
+            <a href="{% url 'account_login' %}" class="login-btn">Login</a>
+          {% endif %}
+          <div class="top-actions">
+            <button id="todayBtn">Today</button>
+            <button id="toggleSidebar">☰</button>
+          </div>
+        </div>
+      </header>
+      <main class="layout">
+        <section class="calendar-panel">
+          <div id="calendar"></div>
+        </section>
+        <aside class="sidebar" id="sidebar">
+          <!-- Day items panel FIRST (current selection) -->
+          <div class="day-panel" id="dayPanel">
+            <div class="panel-header">
+              <h2 id="dayPanelTitle">Items for</h2>
+            </div>
+            <div id="dayItemsList"></div>
+          </div>
+
+          <!-- Events panel in the middle -->
+          <div class="events-panel">
+            <div class="panel-header">
+              <div class="title-with-thumbs">
+                <h2>Events</h2>
+                <div id="eventsSelectedThumbs" class="selected-thumbs"></div>
+              </div>
+              <div class="panel-actions">
+                <button id="addEventBtn">＋</button>
+                <button id="toggleEvents" class="collapse-btn">▼</button>
+              </div>
+            </div>
+            <ul id="eventsList"></ul>
+          </div>
+
+          <!-- Items panel LAST (anchors to bottom when collapsed) -->
+                      <div class="items-panel">
+              <div class="panel-header">
+                <h2>Items <span id="itemsCount" class="count-badge">0</span></h2>
+                <button id="toggleItems" class="collapse-btn">▼</button>
+              </div>
+              <div id="itemsList"></div>
+            </div>
+        </aside>
+      </main>
+    </div>
+
+    <dialog id="eventDialog">
+      <form method="dialog" id="eventForm">
+        <h3 id="eventDialogTitle">New Event</h3>
+        <label>
+          Title
+          <input type="text" id="eventTitle" required />
+        </label>
+        <label>
+          Color
+          <input type="color" id="eventColor" value="#4f46e5" />
+        </label>
+        <menu>
+          <button type="button" id="cancelEvent">Cancel</button>
+          <button type="submit" id="saveEvent">Save</button>
+        </menu>
+      </form>
+    </dialog>
+
+    <dialog id="itemDialog">
+      <form method="dialog" id="itemForm">
+        <h3 id="itemDialogTitle">New Item</h3>
+        <div class="row">
+          <label>
+            Title
+            <input type="text" id="itemTitle" required />
+          </label>
+          <label>
+            Time
+            <input type="time" id="itemTime" />
+          </label>
+        </div>
+        <label>
+          Description
+          <textarea id="itemDescription"></textarea>
+        </label>
+        <label>
+          Notes
+          <textarea id="itemNotes"></textarea>
+        </label>
+        <menu>
+          <button value="cancel">Cancel</button>
+          <button id="saveItem" value="default">Save</button>
+        </menu>
+      </form>
+    </dialog>
+
+    <script src="{% static 'core/app.js' %}?v={{ timestamp|default:'1' }}" type="module"></script>
+  </body>
+</html>

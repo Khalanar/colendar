@@ -1,0 +1,146 @@
+import json
+from datetime import datetime
+from typing import Optional
+
+from django.contrib.auth.decorators import login_required
+from django.contrib.auth.models import User
+from django.http import HttpRequest, HttpResponse, JsonResponse, HttpResponseNotAllowed
+from django.shortcuts import render, get_object_or_404, redirect
+from django.views.decorators.csrf import csrf_exempt
+from django.contrib import messages
+import time
+
+from .models import Event, EventItem
+
+
+def index(request: HttpRequest) -> HttpResponse:
+    if not request.user.is_authenticated:
+        return redirect('account_login')
+    context = {
+        'timestamp': int(time.time())  # Cache busting for JavaScript
+    }
+    return render(request, "core/index.html", context)
+
+
+def settings_view(request: HttpRequest) -> HttpResponse:
+    if not request.user.is_authenticated:
+        return redirect('account_login')
+
+    if request.method == 'POST':
+        # Handle settings updates
+        username = request.POST.get('username')
+        email = request.POST.get('email')
+
+        if username and username != request.user.username:
+            if User.objects.filter(username=username).exists():
+                messages.error(request, 'Username already taken')
+            else:
+                request.user.username = username
+                request.user.save()
+                messages.success(request, 'Username updated successfully')
+
+        if email and email != request.user.email:
+            if User.objects.filter(email=email).exists():
+                messages.error(request, 'Email already taken')
+            else:
+                request.user.email = email
+                request.user.save()
+                messages.success(request, 'Email updated successfully')
+
+    return render(request, "core/settings.html")
+
+
+def _json(request: HttpRequest) -> dict:
+    if request.body:
+        try:
+            return json.loads(request.body.decode("utf-8"))
+        except json.JSONDecodeError:
+            return {}
+    return {}
+
+
+@login_required
+@csrf_exempt
+def events_collection(request: HttpRequest):
+    if request.method == "GET":
+        events = [e.to_dict(include_items=True) for e in Event.objects.filter(user=request.user).prefetch_related("items")]
+        return JsonResponse(events, safe=False)
+    if request.method == "POST":
+        data = _json(request)
+        title = data.get("title")
+        color = data.get("color")
+        if not title or not color:
+            return JsonResponse({"detail": "title and color required"}, status=400)
+        ev = Event.objects.create(user=request.user, title=title, color=color)
+        return JsonResponse(ev.to_dict(include_items=False), status=201)
+    return HttpResponseNotAllowed(["GET", "POST"])
+
+
+@login_required
+@csrf_exempt
+def event_detail(request: HttpRequest, event_id: int):
+    ev = get_object_or_404(Event, id=event_id, user=request.user)
+    if request.method == "PATCH":
+        data = _json(request)
+        if "title" in data and data["title"] is not None:
+            ev.title = data["title"]
+        if "color" in data and data["color"] is not None:
+            ev.color = data["color"]
+        ev.save()
+        return JsonResponse(ev.to_dict(include_items=False))
+    if request.method == "DELETE":
+        ev.delete()
+        return HttpResponse(status=204)
+    return HttpResponseNotAllowed(["PATCH", "DELETE"])
+
+
+@login_required
+@csrf_exempt
+def items_collection(request: HttpRequest):
+    if request.method == "GET":
+        event_id: Optional[str] = request.GET.get("event_id")
+        date: Optional[str] = request.GET.get("date")
+        qs = EventItem.objects.filter(event__user=request.user)
+        if event_id:
+            qs = qs.filter(event_id=event_id)
+        if date:
+            qs = qs.filter(date=date)
+        items = [it.to_dict() for it in qs]
+        return JsonResponse(items, safe=False)
+    if request.method == "POST":
+        data = _json(request)
+        try:
+            parsed_date = datetime.strptime(data.get("date"), "%Y-%m-%d").date()
+        except Exception:
+            return JsonResponse({"detail": "Invalid date format, expected YYYY-MM-DD"}, status=422)
+        try:
+            ev = Event.objects.get(id=data.get("event_id"), user=request.user)
+        except Event.DoesNotExist:
+            return JsonResponse({"detail": "Parent event not found"}, status=404)
+        item = EventItem.objects.create(
+            event=ev,
+            date=parsed_date,
+            title=data.get("title") or "",
+            time=data.get("time"),
+            description=data.get("description"),
+            notes=data.get("notes"),
+        )
+        return JsonResponse(item.to_dict(), status=201)
+    return HttpResponseNotAllowed(["GET", "POST"])
+
+
+@login_required
+@csrf_exempt
+def item_detail(request: HttpRequest, item_id: int):
+    item = get_object_or_404(EventItem, id=item_id, event__user=request.user)
+    if request.method == "PATCH":
+        data = _json(request)
+        for field in ("title", "time", "description", "notes"):
+            if field in data:
+                setattr(item, field, data[field])
+        item.save()
+        return JsonResponse(item.to_dict())
+    if request.method == "DELETE":
+        item.delete()
+        return HttpResponse(status=204)
+    return HttpResponseNotAllowed(["PATCH", "DELETE"])
