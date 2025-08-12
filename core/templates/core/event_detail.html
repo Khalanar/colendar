@@ -7,6 +7,10 @@
     <title>{{ event.title }} - Colendar</title>
     <link rel="stylesheet" href="{% static 'core/styles.css' %}">
     <style>
+        /* Enable scrolling on this page (override global layout that hides body scroll) */
+        html, body { height: auto; overflow: auto; }
+        body { overflow-y: auto; }
+
         .event-detail-container {
             max-width: 1200px;
             margin: 0 auto;

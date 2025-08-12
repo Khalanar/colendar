@@ -80,6 +80,21 @@ body {
   letter-spacing: 0.5px;
   font-size: 12px;
   color: var(--text-primary);
+  min-height: 44px; /* enforce consistent header height */
+  box-sizing: border-box;
+}
+
+/* Prevent wrapping to keep height consistent */
+.panel-header h2 { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; line-height: 20px; }
+.panel-header .title-with-thumbs { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.panel-header .selected-thumbs { flex-wrap: nowrap; }
+
+/* Normalize header button heights */
+.panel-header .collapse-btn,
+.panel-header .panel-actions button,
+#addEventBtn {
+  height: 28px;
+  line-height: 1;
 }
 
 .events-panel .panel-header h2, .items-panel .panel-header h2, .day-panel .panel-header h2 {
