@@ -58,6 +58,7 @@ body {
 /* When collapsed, keep events near bottom above items */
 .events-panel.collapsed { flex: 0 0 auto; position: sticky; bottom: 0; margin-top: auto; z-index: 1; }
 .events-panel.collapsed #eventsList { display: none; }
+.events-panel.collapsed #addEventLink { display: none; }
 
 /* Make items panel scrollable inside under its header */
 .items-panel { display: flex; flex-direction: column; min-height: 0; }
