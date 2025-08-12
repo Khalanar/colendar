@@ -811,13 +811,13 @@ menu button:active {
 /* Draw text sliding animation */
 .draw-text {
   position: absolute;
-  left: -80px; /* Start completely off-screen */
+  right: -100px; /* Start completely off-screen to the right */
   top: 50%;
   transform: translateY(-50%);
   color: var(--accent);
   font-weight: 500;
   cursor: pointer;
-  transition: left 0.3s ease;
+  transition: right 0.3s ease;
   white-space: nowrap;
   z-index: 10;
   background: var(--panel);
@@ -835,14 +835,26 @@ menu button:active {
 
 /* Show draw text on event row hover (only when not in drawing mode) */
 .event-row:hover .draw-text:not(.drawing) {
-  left: 8px; /* Slide in from the left edge */
+  right: 8px; /* Slide in from the right edge */
 }
 
 /* Keep draw text visible when in drawing mode */
 .event-row .draw-text.drawing {
-  left: 8px;
+  right: 8px;
   color: #10b981; /* Green color for active drawing state */
   border-color: #10b981;
+}
+
+/* Make the eye/view button slide in with draw-text */
+.event-actions {
+  opacity: 0;
+  transform: translateX(12px);
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+.event-row:hover .event-actions,
+.event-row.drawing-active .event-actions {
+  opacity: 1;
+  transform: translateX(0);
 }
 
 .icon-btn {

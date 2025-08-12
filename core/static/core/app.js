@@ -661,6 +661,7 @@ function renderEventsList() {
     // Set initial state for events in drawing mode
     if (state.drawEventId === ev.id) {
       li.classList.add('drawing-active');
+      drawText.classList.add('drawing');
     }
 
     // Add handlers to mirror thumb behavior
