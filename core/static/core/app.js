@@ -1003,12 +1003,13 @@ function highlightViewingEvent() {
   const rows = eventsListEl.querySelectorAll('.event-row');
   rows.forEach((row, idx) => {
     const ev = state.events[idx];
-    if (ev && state.highlightEventIds.has(ev.id)) {
+    if (!ev) return;
+    // Always keep the color variable so borders use the right color even when not viewing
+    row.style.setProperty('--evcolor', ev.color || '#475569');
+    if (state.highlightEventIds.has(ev.id)) {
       row.classList.add('viewing');
-      row.style.setProperty('--evcolor', ev.color || '#475569');
     } else {
       row.classList.remove('viewing');
-      row.style.removeProperty('--evcolor');
     }
   });
 }
