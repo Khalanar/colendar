@@ -44,6 +44,9 @@ body {
 .layout.sidebar-collapsed { grid-template-columns: 1fr; }
 .layout.sidebar-collapsed .sidebar { display: none; }
 .calendar-panel { overflow: auto; padding: 16px; position: relative; min-height: 0; }
+/* Hide scrollbar in calendar section but keep it scrollable */
+.calendar-panel { scrollbar-width: none; -ms-overflow-style: none; }
+.calendar-panel::-webkit-scrollbar { display: none; }
 .sidebar { border-left: 1px solid var(--border); padding: 0; display: flex; flex-direction: column; min-height: 0; overflow: hidden; }
 
 /* Panels (right sidebar) */
