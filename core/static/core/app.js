@@ -578,7 +578,7 @@ function renderSelectedEventThumbs() {
       t.addEventListener('dblclick', async (e) => {
         e.preventDefault();
         e.stopPropagation();
-        await pickAndSaveColor(ev.id, ev.color);
+        openColorPopover(ev.id, ev.color, t);
       });
 
       // Right-click: set this event as the active drawing event
@@ -755,6 +755,104 @@ async function pickAndSaveColor(eventId, currentColor) {
   });
 }
 
+// Custom color popover with Save/Cancel; anchored to an element
+function openColorPopover(eventId, currentColor, anchorEl) {
+  const rect = anchorEl.getBoundingClientRect();
+  const evIndex = state.events.findIndex(e => e.id === eventId);
+  const originalColor = evIndex >= 0 ? state.events[evIndex].color : (currentColor || '#666666');
+  let lastPreview = originalColor;
+  let committed = false;
+
+  const pop = document.createElement('div');
+  pop.className = 'color-popover';
+  pop.style.position = 'fixed';
+  pop.style.top = `${rect.bottom + 8}px`;
+  pop.style.left = `${Math.min(rect.left, window.innerWidth - 220)}px`;
+  pop.style.zIndex = '9999';
+  pop.style.background = 'var(--panel, #1f2937)';
+  pop.style.border = '1px solid var(--border, #334155)';
+  pop.style.borderRadius = '8px';
+  pop.style.padding = '12px';
+  pop.style.boxShadow = '0 8px 24px rgba(0,0,0,0.3)';
+  pop.style.display = 'inline-flex';
+  pop.style.alignItems = 'center';
+  pop.style.gap = '10px';
+
+  const picker = document.createElement('input');
+  picker.type = 'color';
+  picker.value = originalColor;
+  picker.style.width = '40px';
+  picker.style.height = '40px';
+  picker.style.border = 'none';
+  picker.style.background = 'transparent';
+
+  const saveBtn = document.createElement('button');
+  saveBtn.textContent = 'Save';
+  saveBtn.className = 'btn btn-primary';
+
+  const cancelBtn = document.createElement('button');
+  cancelBtn.textContent = 'Cancel';
+  cancelBtn.className = 'btn btn-secondary';
+
+  function applyPreview(color) {
+    if (evIndex >= 0) {
+      state.events[evIndex].color = color;
+      renderSelectedEventThumbs();
+      renderEventsList();
+      paintCalendarSelections();
+    }
+  }
+
+  picker.addEventListener('input', (e) => {
+    lastPreview = e.target.value;
+    applyPreview(lastPreview);
+  });
+
+  async function commit() {
+    committed = true;
+    try {
+      await api.patch(`/api/events/${eventId}`, { color: lastPreview });
+      await refreshEvents();
+      paintCalendarSelections();
+    } finally {
+      close();
+    }
+  }
+
+  function revert() {
+    if (!committed) applyPreview(originalColor);
+    close();
+  }
+
+  function onKey(e) {
+    if (e.key === 'Enter') { e.preventDefault(); commit(); }
+    else if (e.key === 'Escape') { e.preventDefault(); revert(); }
+  }
+
+  function onOutside(e) {
+    if (!pop.contains(e.target)) revert();
+  }
+
+  function close() {
+    document.removeEventListener('keydown', onKey);
+    document.removeEventListener('mousedown', onOutside);
+    pop.remove();
+  }
+
+  saveBtn.addEventListener('click', (e) => { e.stopPropagation(); commit(); });
+  cancelBtn.addEventListener('click', (e) => { e.stopPropagation(); revert(); });
+
+  pop.appendChild(picker);
+  pop.appendChild(saveBtn);
+  pop.appendChild(cancelBtn);
+  document.body.appendChild(pop);
+
+  // Focus for keyboard support
+  picker.focus();
+  document.addEventListener('keydown', onKey);
+  document.addEventListener('mousedown', onOutside);
+}
+
 function isolateEventHighlight(eventId) {
   // Replace current selection with only this event
   state.highlightEventIds = new Set([eventId]);
@@ -888,7 +986,7 @@ function renderEventsList() {
     color.addEventListener('dblclick', async (e) => {
       e.preventDefault();
       e.stopPropagation();
-      await pickAndSaveColor(ev.id, ev.color);
+      openColorPopover(ev.id, ev.color, color);
     });
     color.addEventListener('mouseenter', (e) => {
       const html = `<strong>${escapeHtml(ev.title || 'Event')}</strong>`;
