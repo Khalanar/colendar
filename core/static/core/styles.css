@@ -36,6 +36,9 @@ body {
 .top-actions button, .login-btn { background: var(--bg-hover); color: var(--text-primary); border: 1px solid var(--border); border-radius: 8px; padding: 6px 10px; cursor: pointer; }
 #toggleSidebar { background: var(--bg-hover); color: var(--text-primary); border: 1px solid var(--border); border-radius: 8px; padding: 6px 10px; cursor: pointer; }
 
+/* Center the Colendar brand in the topbar */
+.topbar h1 { position: absolute; left: 50%; transform: translateX(-50%); margin: 0; pointer-events: none; }
+
 /* Layout */
 .layout { display: grid; grid-template-columns: 1fr 360px; height: calc(100vh - var(--topbar-h)); min-height: 0; }
 .layout.sidebar-collapsed { grid-template-columns: 1fr; }
