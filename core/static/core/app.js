@@ -521,23 +521,53 @@ function renderEventsList() {
 
     const title = document.createElement('div'); title.className = 'event-title'; title.textContent = ev.title;
 
-    const actions = document.createElement('div'); actions.className = 'event-actions';
-    const drawBtn = document.createElement('button');
-    drawBtn.textContent = 'Draw';
-    drawBtn.className = 'draw-btn';
-    drawBtn.addEventListener('click', async (e) => {
+    // Create event actions
+    const actions = document.createElement('div');
+    actions.className = 'event-actions';
+
+    // Add sliding draw text
+    const drawText = document.createElement('span');
+    drawText.className = 'draw-text';
+    if (state.drawEventId === ev.id) {
+      drawText.textContent = 'Drawing';
+      drawText.classList.add('drawing');
+    } else {
+      drawText.textContent = 'Draw';
+    }
+    drawText.addEventListener('click', async (e) => {
       e.stopPropagation();
-      // Clear any existing draw mode
-      state.drawEventId = null;
-      // Set this event as draw mode
-      state.drawEventId = ev.id;
+      if (state.drawEventId === ev.id) {
+        state.drawEventId = null; // Clear draw mode
+        drawText.textContent = 'Draw';
+        drawText.classList.remove('drawing');
+      } else {
+        state.drawEventId = null; // Clear any existing draw mode
+        state.drawEventId = ev.id; // Set this event as draw mode
+        drawText.textContent = 'Drawing';
+        drawText.classList.add('drawing');
+      }
       await loadItemsForEvent(ev.id);
       paintCalendarSelections();
     });
 
-    const editBtn = document.createElement('button'); editBtn.textContent = 'Edit'; editBtn.addEventListener('click', (e) => { e.stopPropagation(); openEventDialog(ev); });
-    const delBtn = document.createElement('button'); delBtn.textContent = 'Delete'; delBtn.addEventListener('click', async (e) => { e.stopPropagation(); await api.del(`/api/events/${ev.id}`); window.location.reload(); });
-    actions.appendChild(drawBtn); actions.appendChild(editBtn); actions.appendChild(delBtn);
+    const editBtn = document.createElement('button');
+    editBtn.textContent = 'Edit';
+    editBtn.addEventListener('click', async (e) => {
+      e.stopPropagation();
+      openEventDialog(ev);
+    });
+
+    const delBtn = document.createElement('button');
+    delBtn.textContent = 'Delete';
+    delBtn.addEventListener('click', async (e) => {
+      e.stopPropagation();
+      await api.del(`/api/events/${ev.id}`);
+      window.location.reload();
+    });
+
+    actions.appendChild(drawText);
+    actions.appendChild(editBtn);
+    actions.appendChild(delBtn);
 
     li.appendChild(color); li.appendChild(title); li.appendChild(actions);
 
@@ -847,33 +877,30 @@ if (prevYearBtn) prevYearBtn.addEventListener('click', () => { state.year -= 1; 
 if (nextYearBtn) nextYearBtn.addEventListener('click', () => { state.year += 1; ensureYearRendered(state.year); scrollToYear(state.year); });
 
 async function refreshEvents() {
-  state.events = await api.get('/api/events');
-  if (!state.events.some(e => e.id === state.drawEventId)) state.drawEventId = null;
-  if (!state.events.some(e => e.id === state.viewingEventId)) state.viewingEventId = null;
+  const response = await api.get('/api/events');
+  state.events = response;
 
   // Handle preselected events for new users
   if (window.preselectedEventIds && window.preselectedEventIds.length > 0) {
-    // Clear any existing highlights
     state.highlightEventIds.clear();
-    // Add the preselected event IDs
     for (const id of window.preselectedEventIds) {
       if (state.events.some(e => e.id === id)) {
         state.highlightEventIds.add(id);
       }
     }
-    // Clear the preselected IDs so they're only applied once
-    window.preselectedEventIds = null;
+    window.preselectedEventIds = null; // Clear so it's only applied once
   } else {
-    // Restore persisted highlights for existing users
     restoreHighlightState();
     state.highlightEventIds = new Set([...state.highlightEventIds].filter(id => state.events.some(e => e.id === id)));
   }
 
+  // Clear draw mode if the event no longer exists
+  if (state.drawEventId && !state.events.some(e => e.id === state.drawEventId)) {
+    state.drawEventId = null;
+  }
+
   renderEventsList();
-  highlightViewingEvent();
   paintCalendarSelections();
-  renderSelectedEventThumbs();
-  saveHighlightState();
 }
 
 function applyItemsCollapsedState() {
