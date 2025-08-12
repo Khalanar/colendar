@@ -636,7 +636,7 @@ function renderEventsList() {
 
     const drawBtn = document.createElement('button');
     drawBtn.className = 'icon-btn draw-btn';
-    drawBtn.textContent = state.drawEventId === ev.id ? 'Drawing' : 'Draw';
+    drawBtn.textContent = state.drawEventId === ev.id ? 'Stop drawing' : 'Draw';
     if (state.drawEventId === ev.id) drawBtn.classList.add('active');
     drawBtn.addEventListener('click', async (e) => {
       e.stopPropagation();
