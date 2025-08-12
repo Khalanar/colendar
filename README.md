@@ -129,6 +129,357 @@ Visit http://127.0.0.1:8001/
 - `redirect_uri_mismatch` (Google) → verify Sites domain, Redirect URIs, and JS origins exactly match your dev URL.
 - Can’t see models in admin → confirm `core/admin.py` exists and you’re using a staff/superuser.
 
+## API Documentation
+
+All API endpoints require authentication. Include the CSRF token in headers for POST/PATCH/DELETE requests.
+
+### Authentication
+```bash
+# Get CSRF token from cookies
+curl -c cookies.txt -b cookies.txt http://127.0.0.1:8001/
+
+# Use CSRF token in subsequent requests
+curl -H "X-CSRFToken: <csrf-token>" -b cookies.txt ...
+```
+
+### Events API
+
+#### Get All Events
+```bash
+GET /api/events
+```
+**Response:**
+```json
+[
+  {
+    "id": 1,
+    "title": "Work Meetings",
+    "color": "#3b82f6",
+    "user": 1
+  },
+  {
+    "id": 2,
+    "title": "Personal Tasks",
+    "color": "#ef4444",
+    "user": 1
+  }
+]
+```
+
+#### Create Event
+```bash
+POST /api/events
+Content-Type: application/json
+X-CSRFToken: <csrf-token>
+
+{
+  "title": "New Event",
+  "color": "#10b981"
+}
+```
+**Response:**
+```json
+{
+  "id": 3,
+  "title": "New Event",
+  "color": "#10b981",
+  "user": 1
+}
+```
+
+#### Update Event
+```bash
+PATCH /api/events/3
+Content-Type: application/json
+X-CSRFToken: <csrf-token>
+
+{
+  "title": "Updated Event",
+  "color": "#f59e0b"
+}
+```
+**Response:**
+```json
+{
+  "id": 3,
+  "title": "Updated Event",
+  "color": "#f59e0b",
+  "user": 1
+}
+```
+
+#### Delete Event
+```bash
+DELETE /api/events/3
+X-CSRFToken: <csrf-token>
+```
+**Response:** `204 No Content`
+
+### Items API
+
+#### Get Items by Event
+```bash
+GET /api/items?event_id=1
+```
+**Response:**
+```json
+[
+  {
+    "id": 1,
+    "event": 1,
+    "title": "Weekly Standup",
+    "date": "2025-08-12",
+    "time": "09:00",
+    "description": "Team sync meeting",
+    "notes": "Prepare demo"
+  }
+]
+```
+
+#### Get Items by Date
+```bash
+GET /api/items?date=2025-08-12
+```
+**Response:**
+```json
+[
+  {
+    "id": 1,
+    "event": 1,
+    "title": "Weekly Standup",
+    "date": "2025-08-12",
+    "time": "09:00",
+    "description": "Team sync meeting",
+    "notes": "Prepare demo"
+  },
+  {
+    "id": 2,
+    "event": 2,
+    "title": "Doctor Appointment",
+    "date": "2025-08-12",
+    "time": "14:30",
+    "description": "Annual checkup",
+    "notes": "Bring insurance card"
+  }
+]
+```
+
+#### Create Item
+```bash
+POST /api/items
+Content-Type: application/json
+X-CSRFToken: <csrf-token>
+
+{
+  "event": 1,
+  "title": "New Item",
+  "date": "2025-08-15",
+  "time": "10:00",
+  "description": "Item description",
+  "notes": "Additional notes"
+}
+```
+**Response:**
+```json
+{
+  "id": 3,
+  "event": 1,
+  "title": "New Item",
+  "date": "2025-08-15",
+  "time": "10:00",
+  "description": "Item description",
+  "notes": "Additional notes"
+}
+```
+
+#### Update Item
+```bash
+PATCH /api/items/3
+Content-Type: application/json
+X-CSRFToken: <csrf-token>
+
+{
+  "title": "Updated Item",
+  "time": "11:00",
+  "description": "Updated description"
+}
+```
+**Response:**
+```json
+{
+  "id": 3,
+  "event": 1,
+  "title": "Updated Item",
+  "date": "2025-08-15",
+  "time": "11:00",
+  "description": "Updated description",
+  "notes": "Additional notes"
+}
+```
+
+#### Delete Item
+```bash
+DELETE /api/items/3
+X-CSRFToken: <csrf-token>
+```
+**Response:** `204 No Content`
+
+### Export/Import API
+
+#### Export Event (JSON)
+```bash
+GET /api/export/event/1
+```
+**Response:**
+```json
+{
+  "event": {
+    "title": "Work Meetings",
+    "color": "#3b82f6"
+  },
+  "items": [
+    {
+      "title": "Weekly Standup",
+      "date": "2025-08-12",
+      "time": "09:00",
+      "description": "Team sync meeting",
+      "notes": "Prepare demo"
+    },
+    {
+      "title": "Project Review",
+      "date": "2025-08-13",
+      "time": "15:00",
+      "description": "Review project progress",
+      "notes": "Bring presentation"
+    }
+  ]
+}
+```
+
+#### Import Event (JSON)
+```bash
+POST /api/import
+Content-Type: application/json
+X-CSRFToken: <csrf-token>
+
+{
+  "data": "{\"event\":{\"title\":\"Imported Event\",\"color\":\"#8b5cf6\"},\"items\":[{\"title\":\"Imported Item\",\"date\":\"2025-08-20\",\"time\":\"10:00\",\"description\":\"Imported description\",\"notes\":\"Imported notes\"}]}"
+}
+```
+**Response:**
+```json
+{
+  "success": true,
+  "events_created": 1,
+  "items_created": 1
+}
+```
+
+### Event Detail Pages
+
+#### View Event Detail Page
+```bash
+GET /events/1/
+```
+**Response:** HTML page showing event details and items with export/import functionality.
+
+### Error Responses
+
+#### 400 Bad Request
+```json
+{
+  "error": "Invalid JSON format: Expecting ',' delimiter"
+}
+```
+
+#### 401 Unauthorized
+```json
+{
+  "error": "Authentication required"
+}
+```
+
+#### 404 Not Found
+```json
+{
+  "error": "Event not found"
+}
+```
+
+#### 405 Method Not Allowed
+```json
+{
+  "error": "Method not allowed"
+}
+```
+
+### JavaScript Examples
+
+#### Fetch Events
+```javascript
+const response = await fetch('/api/events');
+const events = await response.json();
+console.log(events);
+```
+
+#### Create Event
+```javascript
+const response = await fetch('/api/events', {
+  method: 'POST',
+  headers: {
+    'Content-Type': 'application/json',
+    'X-CSRFToken': getCookie('csrftoken')
+  },
+  body: JSON.stringify({
+    title: 'New Event',
+    color: '#10b981'
+  })
+});
+const event = await response.json();
+```
+
+#### Get Items for Date
+```javascript
+const response = await fetch('/api/items?date=2025-08-12');
+const items = await response.json();
+console.log(items);
+```
+
+#### Export Event
+```javascript
+const response = await fetch('/api/export/event/1');
+const exportData = await response.json();
+navigator.clipboard.writeText(JSON.stringify(exportData, null, 2));
+```
+
+### Python Examples
+
+#### Using requests library
+```python
+import requests
+
+# Login and get session
+session = requests.Session()
+session.get('http://127.0.0.1:8001/accounts/login/')
+
+# Create event
+response = session.post('http://127.0.0.1:8001/api/events/', json={
+    'title': 'Python Event',
+    'color': '#3b82f6'
+})
+event = response.json()
+
+# Create item
+response = session.post('http://127.0.0.1:8001/api/items/', json={
+    'event': event['id'],
+    'title': 'Python Item',
+    'date': '2025-08-15',
+    'time': '14:00',
+    'description': 'Created via Python'
+})
+item = response.json()
+```
+
 ## Contributing
 Issues and PRs welcome after initial publish.
 
