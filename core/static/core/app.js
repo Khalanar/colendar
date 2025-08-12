@@ -1077,11 +1077,12 @@ async function bootWrapper() {
   disableHoverOnlyUIOnTouch();
 }
 
-// Replace boot reference if present
-if (typeof boot !== 'function') {
-  window.addEventListener('DOMContentLoaded', () => bootWrapper());
+// Always bind and run boot wrapper
+window.boot = bootWrapper;
+if (document.readyState === 'loading') {
+  window.addEventListener('DOMContentLoaded', bootWrapper);
 } else {
-  window.boot = bootWrapper;
+  bootWrapper();
 }
 
 function getRandomColor() {
