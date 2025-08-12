@@ -28,7 +28,7 @@ def create_sample_data_for_user(user):
     """Create sample events and items for a new user"""
     # Check if user already has events
     if Event.objects.filter(user=user).exists():
-        return
+        return None
 
     # Sample event titles
     event_titles = [
@@ -138,17 +138,21 @@ def create_sample_data_for_user(user):
                 date=day
             )
 
+    # Return the created event IDs for preselection
+    return [event1.id, event2.id]
+
 
 @login_required
 def index(request: HttpRequest) -> HttpResponse:
     if not request.user.is_authenticated:
         return redirect('account_login')
 
-    # Create sample data for new users
-    create_sample_data_for_user(request.user)
+    # Create sample data for new users and get preselected event IDs
+    preselected_event_ids = create_sample_data_for_user(request.user)
 
     context = {
-        'timestamp': int(time.time())  # Cache busting for JavaScript
+        'timestamp': int(time.time()),  # Cache busting for JavaScript
+        'preselected_event_ids': preselected_event_ids
     }
     return render(request, "core/index.html", context)
 

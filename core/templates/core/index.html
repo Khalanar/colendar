@@ -11,7 +11,7 @@
     <link rel="stylesheet" href="{% static 'core/styles.css' %}" />
   </head>
   <body>
-    <div id="app">
+    <div id="app" data-preselected-events="{% if preselected_event_ids %}{{ preselected_event_ids|safe }}{% else %}null{% endif %}">
       <header class="topbar">
         <div class="topbar-left">
           <h1>Colendar</h1>
@@ -120,6 +120,10 @@
       </form>
     </dialog>
 
+    <script>
+      // Pass preselected event IDs from Django to JavaScript
+      window.preselectedEventIds = JSON.parse(document.getElementById('app').getAttribute('data-preselected-events') || 'null');
+    </script>
     <script src="{% static 'core/app.js' %}?v={{ timestamp|default:'1' }}" type="module"></script>
   </body>
 </html>

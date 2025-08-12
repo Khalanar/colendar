@@ -753,9 +753,25 @@ async function refreshEvents() {
   state.events = await api.get('/api/events');
   if (!state.events.some(e => e.id === state.drawEventId)) state.drawEventId = null;
   if (!state.events.some(e => e.id === state.viewingEventId)) state.viewingEventId = null;
-  // Restore persisted highlights first, then validate against current events
-  restoreHighlightState();
-  state.highlightEventIds = new Set([...state.highlightEventIds].filter(id => state.events.some(e => e.id === id)));
+
+  // Handle preselected events for new users
+  if (window.preselectedEventIds && window.preselectedEventIds.length > 0) {
+    // Clear any existing highlights
+    state.highlightEventIds.clear();
+    // Add the preselected event IDs
+    for (const id of window.preselectedEventIds) {
+      if (state.events.some(e => e.id === id)) {
+        state.highlightEventIds.add(id);
+      }
+    }
+    // Clear the preselected IDs so they're only applied once
+    window.preselectedEventIds = null;
+  } else {
+    // Restore persisted highlights for existing users
+    restoreHighlightState();
+    state.highlightEventIds = new Set([...state.highlightEventIds].filter(id => state.events.some(e => e.id === id)));
+  }
+
   renderEventsList();
   highlightViewingEvent();
   paintCalendarSelections();
@@ -815,13 +831,22 @@ function setupSidebarCollapse() {
   });
 }
 
-async function boot() { setupItemsCollapse(); setupSidebarCollapse(); await refreshEvents(); renderCalendar();
+async function boot() {
+  setupItemsCollapse();
+  setupSidebarCollapse();
+  await refreshEvents();
+  renderCalendar();
   setupEventsCollapse();
   const now = new Date();
   const todayStr = toDateStr(now.getFullYear(), now.getMonth(), now.getDate());
-  // Restore highlighted events and preload their items
-  restoreHighlightState();
-  for (const id of state.highlightEventIds) { try { await loadItemsForEvent(id); } catch {} }
+
+  // Load items for highlighted events (including preselected ones)
+  for (const id of state.highlightEventIds) {
+    try {
+      await loadItemsForEvent(id);
+    } catch {}
+  }
+
   highlightViewingEvent();
   paintCalendarSelections();
   renderSelectedEventThumbs();
