@@ -1,0 +1,484 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ event.title }} - Colendar</title>
+    <link rel="stylesheet" href="{% static 'core/styles.css' %}">
+    <style>
+        .event-detail-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .event-header {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            margin-bottom: 30px;
+            padding: 20px;
+            background: var(--panel);
+            border-radius: 12px;
+            border: 1px solid var(--border);
+        }
+
+        .event-color-display {
+            width: 60px;
+            height: 60px;
+            border-radius: 12px;
+            border: 2px solid var(--border);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+
+        .event-info h1 {
+            margin: 0 0 8px 0;
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+
+        .event-meta {
+            color: var(--text-secondary);
+            font-size: 1.1rem;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 12px;
+            margin-left: auto;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border-radius: 8px;
+            border: none;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn-secondary {
+            background: var(--bg-hover);
+            color: var(--text-primary);
+            border: 1px solid var(--border);
+        }
+
+        .btn-secondary:hover {
+            background: var(--border);
+        }
+
+        .items-section {
+            background: var(--panel);
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            overflow: hidden;
+        }
+
+        .items-header {
+            padding: 20px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .items-header h2 {
+            margin: 0;
+            font-size: 1.5rem;
+            color: var(--text-primary);
+        }
+
+        .items-count {
+            background: var(--accent);
+            color: white;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            font-weight: 600;
+        }
+
+        .items-list {
+            padding: 0;
+            margin: 0;
+            list-style: none;
+        }
+
+        .item-card {
+            padding: 20px;
+            border-bottom: 1px solid var(--border);
+            transition: background 0.2s ease;
+        }
+
+        .item-card:hover {
+            background: var(--bg-hover);
+        }
+
+        .item-card:last-child {
+            border-bottom: none;
+        }
+
+        .item-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 12px;
+        }
+
+        .item-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin: 0;
+        }
+
+        .item-date {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+
+        .item-time {
+            background: var(--accent);
+            color: white;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            font-weight: 500;
+        }
+
+        .item-description {
+            color: var(--text-secondary);
+            margin: 8px 0;
+            line-height: 1.5;
+        }
+
+        .item-notes {
+            background: var(--bg-hover);
+            padding: 12px;
+            border-radius: 6px;
+            border-left: 3px solid var(--accent);
+            font-style: italic;
+            color: var(--text-secondary);
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: var(--text-secondary);
+        }
+
+        .empty-state h3 {
+            margin: 0 0 12px 0;
+            font-size: 1.3rem;
+        }
+
+        .empty-state p {
+            margin: 0;
+            font-size: 1rem;
+        }
+
+        .back-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--accent);
+            text-decoration: none;
+            font-weight: 500;
+            margin-bottom: 20px;
+            transition: color 0.2s ease;
+        }
+
+        .back-link:hover {
+            color: color-mix(in oklab, var(--accent) 80%, white);
+        }
+
+        .import-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+            backdrop-filter: blur(4px);
+        }
+
+        .import-modal.active {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .import-content {
+            background: var(--panel);
+            border-radius: 12px;
+            padding: 30px;
+            max-width: 600px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+            border: 1px solid var(--border);
+        }
+
+        .import-content h3 {
+            margin: 0 0 20px 0;
+            font-size: 1.5rem;
+            color: var(--text-primary);
+        }
+
+        .import-textarea {
+            width: 100%;
+            min-height: 200px;
+            padding: 16px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            background: var(--bg-hover);
+            color: var(--text-primary);
+            font-family: inherit;
+            resize: vertical;
+            margin-bottom: 20px;
+        }
+
+        .import-textarea:focus {
+            outline: none;
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+        }
+
+        .modal-buttons {
+            display: flex;
+            gap: 12px;
+            justify-content: flex-end;
+        }
+
+        .success-message {
+            background: linear-gradient(135deg, #10b981, #059669);
+            color: white;
+            padding: 16px 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .error-message {
+            background: linear-gradient(135deg, #ef4444, #dc2626);
+            color: white;
+            padding: 16px 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+    </style>
+</head>
+<body>
+    <div class="event-detail-container">
+        <a href="/" class="back-link">
+            ← Back to Calendar
+        </a>
+
+        <div class="event-header">
+            <div class="event-color-display" style="background: {{ event.color }}"></div>
+            <div class="event-info">
+                <h1>{{ event.title }}</h1>
+                <div class="event-meta">
+                    {{ items|length }} item{{ items|length|pluralize }} • Created {{ event.created_at|date:"M j, Y" }}
+                </div>
+            </div>
+            <div class="action-buttons">
+                <button class="btn btn-primary" onclick="exportEvent()">
+                    📋 Export
+                </button>
+                <button class="btn btn-secondary" onclick="showImportModal()">
+                    📥 Import
+                </button>
+            </div>
+        </div>
+
+        <div class="items-section">
+            <div class="items-header">
+                <h2>Items</h2>
+                <span class="items-count">{{ items|length }}</span>
+            </div>
+
+            {% if items %}
+                <ul class="items-list">
+                    {% for item in items %}
+                    <li class="item-card">
+                        <div class="item-header">
+                            <div>
+                                <h3 class="item-title">{{ item.title }}</h3>
+                                <div class="item-date">{{ item.date|date:"F j, Y" }}</div>
+                            </div>
+                            {% if item.time %}
+                                <span class="item-time">{{ item.time }}</span>
+                            {% endif %}
+                        </div>
+
+                        {% if item.description %}
+                            <div class="item-description">{{ item.description }}</div>
+                        {% endif %}
+
+                        {% if item.notes %}
+                            <div class="item-notes">{{ item.notes }}</div>
+                        {% endif %}
+                    </li>
+                    {% endfor %}
+                </ul>
+            {% else %}
+                <div class="empty-state">
+                    <h3>No items yet</h3>
+                    <p>This event doesn't have any items yet. Add some items to get started!</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Import Modal -->
+    <div class="import-modal" id="importModal">
+        <div class="import-content">
+            <h3>Import Events & Items</h3>
+            <div id="importMessage"></div>
+            <textarea
+                class="import-textarea"
+                id="importText"
+                placeholder="Paste exported data here...&#10;&#10;Example format:&#10;Event: My Event&#10;Color: #ff6b6b&#10;Items:&#10;- Title: Item 1 | Date: 2025-01-15 | Time: 14:30 | Description: Description here | Notes: Notes here&#10;- Title: Item 2 | Date: 2025-01-16 | Time: 09:00"
+            ></textarea>
+            <div class="modal-buttons">
+                <button class="btn btn-secondary" onclick="hideImportModal()">Cancel</button>
+                <button class="btn btn-primary" onclick="importData()">Import</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        async function exportEvent() {
+            try {
+                const response = await fetch(`/api/export/event/{{ event.id }}`);
+                const data = await response.json();
+
+                if (response.ok) {
+                    await navigator.clipboard.writeText(data.export_text);
+
+                    // Show success feedback
+                    const btn = event.target;
+                    const originalText = btn.innerHTML;
+                    btn.innerHTML = '✅ Copied!';
+                    btn.style.background = 'linear-gradient(135deg, #10b981, #059669)';
+
+                    setTimeout(() => {
+                        btn.innerHTML = originalText;
+                        btn.style.background = '';
+                    }, 2000);
+                } else {
+                    alert('Export failed: ' + data.error);
+                }
+            } catch (error) {
+                alert('Export failed: ' + error.message);
+            }
+        }
+
+        function showImportModal() {
+            document.getElementById('importModal').classList.add('active');
+            document.getElementById('importText').focus();
+        }
+
+        function hideImportModal() {
+            document.getElementById('importModal').classList.remove('active');
+            document.getElementById('importText').value = '';
+            document.getElementById('importMessage').innerHTML = '';
+        }
+
+        async function importData() {
+            const importText = document.getElementById('importText').value.trim();
+            const messageDiv = document.getElementById('importMessage');
+
+            if (!importText) {
+                messageDiv.innerHTML = '<div class="error-message">⚠️ Please enter some data to import</div>';
+                return;
+            }
+
+            try {
+                const response = await fetch('/api/import', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': getCookie('csrftoken')
+                    },
+                    body: JSON.stringify({ data: importText })
+                });
+
+                const result = await response.json();
+
+                if (response.ok) {
+                    messageDiv.innerHTML = `
+                        <div class="success-message">
+                            ✅ Successfully imported ${result.events_created} event(s) and ${result.items_created} item(s)!
+                        </div>
+                    `;
+
+                    // Clear the textarea
+                    document.getElementById('importText').value = '';
+
+                    // Reload the page after a short delay to show new data
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 1500);
+                } else {
+                    messageDiv.innerHTML = `<div class="error-message">❌ Import failed: ${result.error}</div>`;
+                }
+            } catch (error) {
+                messageDiv.innerHTML = `<div class="error-message">❌ Import failed: ${error.message}</div>`;
+            }
+        }
+
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+
+        // Close modal when clicking outside
+        document.getElementById('importModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                hideImportModal();
+            }
+        });
+
+        // Close modal with Escape key
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                hideImportModal();
+            }
+        });
+    </script>
+</body>
+</html>

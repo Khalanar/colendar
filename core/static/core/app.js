@@ -563,6 +563,13 @@ function renderEventsList() {
       openEventDialog(ev);
     });
 
+    const viewBtn = document.createElement('button');
+    viewBtn.textContent = 'View';
+    viewBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      window.open(`/events/${ev.id}/`, '_blank');
+    });
+
     const delBtn = document.createElement('button');
     delBtn.textContent = 'Delete';
     delBtn.addEventListener('click', async (e) => {
@@ -572,6 +579,7 @@ function renderEventsList() {
     });
 
     actions.appendChild(editBtn);
+    actions.appendChild(viewBtn);
     actions.appendChild(delBtn);
 
     li.appendChild(drawText);

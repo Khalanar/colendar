@@ -1,4 +1,5 @@
 import json
+import re
 from datetime import datetime, date, timedelta
 from typing import Optional
 import random
@@ -205,6 +206,19 @@ def settings_view(request):
     return render(request, "core/settings.html")
 
 
+@login_required
+def event_detail_page(request, event_id):
+    """Display a detailed view of an event with all its items"""
+    event = get_object_or_404(Event, id=event_id, user=request.user)
+    items = EventItem.objects.filter(event=event).order_by('date', 'time')
+
+    context = {
+        'event': event,
+        'items': items,
+    }
+    return render(request, "core/event_detail.html", context)
+
+
 def _json(request: HttpRequest) -> dict:
     if request.body:
         try:
@@ -363,3 +377,136 @@ def item_detail(request: HttpRequest, item_id: int):
         item.delete()
         return HttpResponse(status=204)
     return HttpResponseNotAllowed(["PATCH", "DELETE"])
+
+
+@login_required
+def export_event(request, event_id):
+    """Export an event and all its items to a text format"""
+    event = get_object_or_404(Event, id=event_id, user=request.user)
+    items = EventItem.objects.filter(event=event).order_by('date', 'time')
+
+    # Create export text
+    export_lines = []
+    export_lines.append(f"Event: {event.title}")
+    export_lines.append(f"Color: {event.color}")
+    export_lines.append("Items:")
+
+    for item in items:
+        item_line = f"- Title: {item.title}"
+        item_line += f" | Date: {item.date.strftime('%Y-%m-%d')}"
+        if item.time:
+            item_line += f" | Time: {item.time}"
+        if item.description:
+            item_line += f" | Description: {item.description}"
+        if item.notes:
+            item_line += f" | Notes: {item.notes}"
+        export_lines.append(item_line)
+
+    export_text = "\n".join(export_lines)
+
+    return JsonResponse({
+        'export_text': export_text,
+        'event_title': event.title,
+        'items_count': items.count()
+    })
+
+@login_required
+@csrf_exempt
+def import_data(request):
+    """Import events and items from text format"""
+    if request.method != 'POST':
+        return JsonResponse({'error': 'Method not allowed'}, status=405)
+
+    try:
+        data = json.loads(request.body)
+        import_text = data.get('data', '').strip()
+
+        if not import_text:
+            return JsonResponse({'error': 'No data provided'}, status=400)
+
+        events_created = 0
+        items_created = 0
+
+        # Parse the import text
+        lines = import_text.split('\n')
+        current_event = None
+        current_items = []
+
+        for line in lines:
+            line = line.strip()
+            if not line:
+                continue
+
+            if line.startswith('Event:'):
+                # Save previous event if exists
+                if current_event:
+                    current_event.save()
+                    events_created += 1
+                    for item_data in current_items:
+                        EventItem.objects.create(
+                            event=current_event,
+                            **item_data
+                        )
+                        items_created += 1
+
+                # Start new event
+                event_title = line[6:].strip()
+                current_event = Event(
+                    user=request.user,
+                    title=event_title,
+                    color=get_random_color()
+                )
+                current_items = []
+
+            elif line.startswith('Color:') and current_event:
+                color = line[6:].strip()
+                if color.startswith('#'):
+                    current_event.color = color
+
+            elif line.startswith('- Title:') and current_event:
+                # Parse item line
+                item_data = {}
+                parts = line[9:].split(' | ')
+
+                for part in parts:
+                    if ':' in part:
+                        key, value = part.split(':', 1)
+                        key = key.strip().lower()
+                        value = value.strip()
+
+                        if key == 'title':
+                            item_data['title'] = value
+                        elif key == 'date':
+                            try:
+                                item_data['date'] = datetime.strptime(value, '%Y-%m-%d').date()
+                            except ValueError:
+                                continue
+                        elif key == 'time':
+                            item_data['time'] = value
+                        elif key == 'description':
+                            item_data['description'] = value
+                        elif key == 'notes':
+                            item_data['notes'] = value
+
+                if 'title' in item_data and 'date' in item_data:
+                    current_items.append(item_data)
+
+        # Save the last event
+        if current_event:
+            current_event.save()
+            events_created += 1
+            for item_data in current_items:
+                EventItem.objects.create(
+                    event=current_event,
+                    **item_data
+                )
+                items_created += 1
+
+        return JsonResponse({
+            'success': True,
+            'events_created': events_created,
+            'items_created': items_created
+        })
+
+    except Exception as e:
+        return JsonResponse({'error': f'Import failed: {str(e)}'}, status=400)
