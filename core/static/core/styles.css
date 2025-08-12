@@ -867,10 +867,10 @@ menu button:active {
   position: absolute;
   left: 2px;
   right: 2px;
-  bottom: -4px;
-  height: 2px;
+  bottom: -7px; /* lower underline */
+  height: 3px;   /* thicker line */
   background: var(--draw-color, var(--accent));
-  border-radius: 1px;
+  border-radius: 13px; /* fully rounded ends */
 }
 
 /* Event row left bar when drawing active */
