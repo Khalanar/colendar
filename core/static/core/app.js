@@ -515,17 +515,11 @@ function restoreHighlightState() {
 function renderEventsList() {
   eventsListEl.innerHTML = '';
   state.events.forEach(ev => {
-    const li = document.createElement('li'); li.className = 'event-row';
+    const li = document.createElement('li');
+    li.className = 'event-row';
+    li.addEventListener('click', () => toggleEventHighlight(ev.id));
 
-    const color = document.createElement('span'); color.className = 'event-color'; color.style.background = ev.color;
-
-    const title = document.createElement('div'); title.className = 'event-title'; title.textContent = ev.title;
-
-    // Create event actions
-    const actions = document.createElement('div');
-    actions.className = 'event-actions';
-
-    // Add sliding draw text
+    // Add sliding draw text as first child
     const drawText = document.createElement('span');
     drawText.className = 'draw-text';
     if (state.drawEventId === ev.id) {
@@ -550,6 +544,18 @@ function renderEventsList() {
       paintCalendarSelections();
     });
 
+    const color = document.createElement('div');
+    color.className = 'event-color';
+    color.style.background = ev.color;
+
+    const title = document.createElement('div');
+    title.className = 'event-title';
+    title.textContent = ev.title;
+
+    // Create event actions
+    const actions = document.createElement('div');
+    actions.className = 'event-actions';
+
     const editBtn = document.createElement('button');
     editBtn.textContent = 'Edit';
     editBtn.addEventListener('click', async (e) => {
@@ -565,11 +571,13 @@ function renderEventsList() {
       window.location.reload();
     });
 
-    actions.appendChild(drawText);
     actions.appendChild(editBtn);
     actions.appendChild(delBtn);
 
-    li.appendChild(color); li.appendChild(title); li.appendChild(actions);
+    li.appendChild(drawText);
+    li.appendChild(color);
+    li.appendChild(title);
+    li.appendChild(actions);
 
     li.addEventListener('click', async () => {
       if (state.highlightEventIds.has(ev.id)) {

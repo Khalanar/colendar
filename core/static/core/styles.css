@@ -682,10 +682,6 @@ menu button:active {
   }
 }
 
-/* Hover affordance on event rows */
-.event-row { transition: background .12s ease, transform .08s ease; }
-.event-row:hover { background: var(--bg-hover); }
-
 /* Draw text sliding animation */
 .draw-text {
   position: absolute;
@@ -698,21 +694,38 @@ menu button:active {
   transition: left 0.3s ease;
   white-space: nowrap;
   z-index: 10;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 6px 12px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
 }
 
 .draw-text:hover {
   color: color-mix(in oklab, var(--accent) 90%, white);
+  border-color: var(--accent);
 }
 
 /* Show draw text on event row hover */
 .event-row:hover .draw-text {
-  left: 8px; /* Slide in from the left */
+  left: 8px; /* Slide in from the left edge */
 }
 
 /* Keep draw text visible when in drawing mode */
 .event-row .draw-text.drawing {
   left: 8px;
   color: #10b981; /* Green color for active drawing state */
+  border-color: #10b981;
+}
+
+/* Ensure event row has relative positioning for absolute draw text */
+.event-row {
+  position: relative;
+  transition: background .12s ease, transform .08s ease;
+}
+
+.event-row:hover {
+  background: var(--bg-hover);
 }
 
 /* Ensure event actions don't interfere with draw text */
