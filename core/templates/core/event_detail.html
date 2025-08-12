@@ -380,6 +380,27 @@
         </div>
     </div>
 
+    <!-- Edit Event Modal -->
+    <div class="import-modal" id="editModal">
+        <div class="import-content">
+            <h3>Edit Event</h3>
+            <div style="display:grid; gap:12px; margin-bottom:12px;">
+                <label style="display:grid; gap:6px;">
+                    <span>Title</span>
+                    <input id="editTitle" type="text" value="{{ event.title }}" style="padding:10px;border:1px solid var(--border);border-radius:8px;background:var(--bg-hover);color:var(--text-primary);"/>
+                </label>
+                <label style="display:grid; gap:6px;">
+                    <span>Color</span>
+                    <input id="editColor" type="color" value="{{ event.color }}" style="height:40px;padding:0;border:1px solid var(--border);border-radius:8px;background:var(--bg-hover);"/>
+                </label>
+            </div>
+            <div class="modal-buttons">
+                <button class="btn btn-secondary" onclick="hideEditModal()">Cancel</button>
+                <button class="btn btn-primary" onclick="saveEditEvent()">Save</button>
+            </div>
+        </div>
+    </div>
+
     <script>
         async function exportEvent(event) {
             try {
@@ -487,39 +508,35 @@
         document.addEventListener('keydown', function(e) {
             if (e.key === 'Escape') {
                 hideImportModal();
+                hideEditModal();
             }
         });
 
-        async function editEvent() {
-            // Open event edit dialog
-            const eventData = {
-                id: {{ event.id }},
-                title: '{{ event.title }}',
-                color: '{{ event.color }}'
-            };
+        function showEditModal() {
+            document.getElementById('editModal').classList.add('active');
+            document.getElementById('editTitle').focus();
+        }
 
-            // Create a simple prompt for editing
-            const newTitle = prompt('Edit event title:', eventData.title);
-            if (newTitle === null) return; // User cancelled
+        function hideEditModal() {
+            document.getElementById('editModal').classList.remove('active');
+        }
 
-            const newColor = prompt('Edit event color (hex):', eventData.color);
-            if (newColor === null) return; // User cancelled
+        async function saveEditEvent() {
+            const title = document.getElementById('editTitle').value.trim();
+            const color = document.getElementById('editColor').value;
+            if (!title) { alert('Title is required'); return; }
 
             try {
-                const response = await fetch(`/api/events/${eventData.id}`, {
+                const response = await fetch(`/api/events/{{ event.id }}`, {
                     method: 'PATCH',
                     headers: {
                         'Content-Type': 'application/json',
                         'X-CSRFToken': getCookie('csrftoken')
                     },
-                    body: JSON.stringify({
-                        title: newTitle,
-                        color: newColor
-                    })
+                    body: JSON.stringify({ title, color })
                 });
-
                 if (response.ok) {
-                    alert('Event updated successfully!');
+                    hideEditModal();
                     window.location.reload();
                 } else {
                     alert('Failed to update event');
@@ -528,6 +545,9 @@
                 alert('Error updating event: ' + error.message);
             }
         }
+
+        // Keep existing API for button compatibility
+        function editEvent() { showEditModal(); }
 
         async function deleteEvent() {
             if (!confirm('Are you sure you want to delete this event? This will also delete all its items.')) {
