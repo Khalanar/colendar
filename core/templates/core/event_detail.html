@@ -305,7 +305,7 @@
                 </div>
             </div>
             <div class="action-buttons">
-                <button class="btn btn-primary" onclick="exportEvent()">
+                <button class="btn btn-primary" onclick="exportEvent(event)">
                     📋 Export
                 </button>
                 <button class="btn btn-secondary" onclick="showImportModal()">
@@ -371,7 +371,7 @@
     </div>
 
     <script>
-        async function exportEvent() {
+        async function exportEvent(event) {
             try {
                 const response = await fetch(`/api/export/event/{{ event.id }}`);
                 const data = await response.json();
