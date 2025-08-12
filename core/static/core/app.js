@@ -568,23 +568,17 @@ function renderSelectedEventThumbs() {
         t.style.setProperty('--draw-color', ev.color || '#666');
       }
 
-      // Add click handler to toggle visibility (highlight)
+      // Click handler to toggle visibility (highlight)
       t.addEventListener('click', (e) => {
         e.stopPropagation();
         toggleEventHighlight(ev.id);
       });
 
-      // Double-click: inline edit event title (delegates to the row title editor)
-      t.addEventListener('dblclick', (e) => {
+      // Double-click: edit color via color picker
+      t.addEventListener('dblclick', async (e) => {
         e.preventDefault();
         e.stopPropagation();
-        const row = document.querySelector(`[data-event-id="${ev.id}"] .event-title`);
-        if (row) {
-          startInlineEdit(row, ev.title, async (newTitle) => {
-            await api.patch(`/api/events/${ev.id}`, { title: newTitle });
-            await refreshEvents();
-          });
-        }
+        await pickAndSaveColor(ev.id, ev.color);
       });
 
       // Right-click: set this event as the active drawing event
@@ -671,6 +665,33 @@ function startInlineEdit(targetEl, initialValue, onSave) {
   targetEl.replaceChildren(input);
   input.focus();
   input.select();
+}
+
+// Color picker helper for event color editing
+async function pickAndSaveColor(eventId, currentColor) {
+  const input = document.createElement('input');
+  input.type = 'color';
+  input.value = currentColor || '#666666';
+  input.style.position = 'fixed';
+  input.style.left = '-9999px';
+  document.body.appendChild(input);
+
+  return new Promise((resolve) => {
+    input.addEventListener('change', async (e) => {
+      try {
+        const newColor = e.target.value;
+        await api.patch(`/api/events/${eventId}`, { color: newColor });
+        await refreshEvents();
+        paintCalendarSelections();
+      } catch (err) {
+        console.error('Failed to update color', err);
+      } finally {
+        input.remove();
+        resolve();
+      }
+    }, { once: true });
+    input.click();
+  });
 }
 
 function isolateEventHighlight(eventId) {
@@ -802,14 +823,11 @@ function renderEventsList() {
         toggleEventHighlight(ev.id);
       }
     });
-    // Allow dblclick on the small color box to edit title too
-    color.addEventListener('dblclick', (e) => {
+    // Double-click on the small color box: edit color
+    color.addEventListener('dblclick', async (e) => {
       e.preventDefault();
       e.stopPropagation();
-      startInlineEdit(title, ev.title, async (newTitle) => {
-        await api.patch(`/api/events/${ev.id}`, { title: newTitle });
-        await refreshEvents();
-      });
+      await pickAndSaveColor(ev.id, ev.color);
     });
     color.addEventListener('mouseenter', (e) => {
       const html = `<strong>${escapeHtml(ev.title || 'Event')}</strong>`;
