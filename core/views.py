@@ -381,28 +381,31 @@ def item_detail(request: HttpRequest, item_id: int):
 
 @login_required
 def export_event(request, event_id):
-    """Export an event and all its items to a text format"""
+    """Export an event and all its items to JSON format"""
     event = get_object_or_404(Event, id=event_id, user=request.user)
     items = EventItem.objects.filter(event=event).order_by('date', 'time')
 
-    # Create export text
-    export_lines = []
-    export_lines.append(f"Event: {event.title}")
-    export_lines.append(f"Color: {event.color}")
-    export_lines.append("Items:")
+    # Create JSON export data
+    export_data = {
+        'event': {
+            'title': event.title,
+            'color': event.color
+        },
+        'items': []
+    }
 
     for item in items:
-        item_line = f"- Title: {item.title}"
-        item_line += f" | Date: {item.date.strftime('%Y-%m-%d')}"
-        if item.time:
-            item_line += f" | Time: {item.time}"
-        if item.description:
-            item_line += f" | Description: {item.description}"
-        if item.notes:
-            item_line += f" | Notes: {item.notes}"
-        export_lines.append(item_line)
+        item_data = {
+            'title': item.title,
+            'date': item.date.strftime('%Y-%m-%d'),
+            'time': item.time or '',
+            'description': item.description or '',
+            'notes': item.notes or ''
+        }
+        export_data['items'].append(item_data)
 
-    export_text = "\n".join(export_lines)
+    # Convert to formatted JSON string
+    export_text = json.dumps(export_data, indent=2)
 
     return JsonResponse({
         'export_text': export_text,
@@ -413,7 +416,7 @@ def export_event(request, event_id):
 @login_required
 @csrf_exempt
 def import_data(request):
-    """Import events and items from text format"""
+    """Import events and items from JSON format"""
     if request.method != 'POST':
         return JsonResponse({'error': 'Method not allowed'}, status=405)
 
@@ -427,116 +430,67 @@ def import_data(request):
         events_created = 0
         items_created = 0
 
-        # Parse the import text
-        lines = import_text.split('\n')
-        current_event = None
-        current_items = []
+        # Parse JSON import data
+        try:
+            import_data = json.loads(import_text)
+        except json.JSONDecodeError as e:
+            return JsonResponse({'error': f'Invalid JSON format: {str(e)}'}, status=400)
 
-        for line in lines:
-            line = line.strip()
-            if not line:
+        # Validate JSON structure
+        if 'event' not in import_data or 'items' not in import_data:
+            return JsonResponse({'error': 'Invalid JSON structure. Expected "event" and "items" keys.'}, status=400)
+
+        event_data = import_data['event']
+        items_data = import_data['items']
+
+        if 'title' not in event_data:
+            return JsonResponse({'error': 'Event title is required'}, status=400)
+
+        # Check if event with same name already exists
+        event_title = event_data['title']
+        existing_event = Event.objects.filter(user=request.user, title=event_title).first()
+
+        if existing_event:
+            print(f"Debug: Event '{event_title}' already exists, using existing event")
+            current_event = existing_event
+        else:
+            current_event = Event(
+                user=request.user,
+                title=event_title,
+                color=event_data.get('color', get_random_color())
+            )
+            current_event.save()
+            events_created += 1
+            print(f"Debug: Created new event '{event_title}'")
+
+        # Create items
+        for item_data in items_data:
+            if 'title' not in item_data or 'date' not in item_data:
+                print(f"Debug: Skipping item - missing title or date: {item_data}")
                 continue
 
-            if line.startswith('Event:'):
-                # Save previous event if exists
-                if current_event:
-                    # Only save if it's a new event (not an existing one)
-                    if not current_event.id:
-                        current_event.save()
-                        events_created += 1
-                        print(f"Debug: Saved new event '{current_event.title}'")
-                    else:
-                        print(f"Debug: Using existing event '{current_event.title}'")
+            try:
+                # Parse date
+                item_date = datetime.strptime(item_data['date'], '%Y-%m-%d').date()
 
-                    # Always save items for the current event (new or existing)
-                    for item_data in current_items:
-                        print(f"Debug: Creating item for event '{current_event.title}': {item_data}")
-                        EventItem.objects.create(
-                            event=current_event,
-                            **item_data
-                        )
-                        items_created += 1
-
-                # Start new event
-                event_title = line[6:].strip()
-
-                # Check if event with same name already exists for this user
-                existing_event = Event.objects.filter(user=request.user, title=event_title).first()
-                if existing_event:
-                    print(f"Debug: Event '{event_title}' already exists, using existing event")
-                    current_event = existing_event
-                else:
-                    current_event = Event(
-                        user=request.user,
-                        title=event_title,
-                        color=get_random_color()
-                    )
-                    print(f"Debug: Creating new event '{event_title}'")
-
-                current_items = []
-
-            elif line.startswith('Color:') and current_event:
-                color = line[6:].strip()
-                if color.startswith('#'):
-                    current_event.color = color
-
-            elif line.startswith('- Title:') and current_event:
-                # Parse item line
-                item_data = {}
-                # Remove the "- Title: " prefix and split by " | "
-                item_content = line[9:]  # Remove "- Title: "
-                parts = item_content.split(' | ')
-                print(f"Debug: Parsing line: '{line}'")
-                print(f"Debug: Item content: '{item_content}'")
-                print(f"Debug: Parts: {parts}")
-
-                for part in parts:
-                    if ':' in part:
-                        key, value = part.split(':', 1)
-                        key = key.strip().lower()
-                        value = value.strip()
-
-                        if key == 'title':
-                            item_data['title'] = value
-                        elif key == 'date':
-                            try:
-                                item_data['date'] = datetime.strptime(value, '%Y-%m-%d').date()
-                            except ValueError:
-                                print(f"Debug: Invalid date format: {value}")
-                                continue
-                        elif key == 'time':
-                            item_data['time'] = value
-                        elif key == 'description':
-                            item_data['description'] = value
-                        elif key == 'notes':
-                            item_data['notes'] = value
-
-                print(f"Debug: Parsed item_data: {item_data}")
-                if 'title' in item_data and 'date' in item_data:
-                    current_items.append(item_data)
-                    print(f"Debug: Added item to current_items. Total: {len(current_items)}")
-                else:
-                    print(f"Debug: Skipping item - missing title or date")
-
-        # Save the last event
-        if current_event:
-            # Only save if it's a new event (not an existing one)
-            if not current_event.id:
-                current_event.save()
-                events_created += 1
-                print(f"Debug: Saved final new event '{current_event.title}'")
-            else:
-                print(f"Debug: Using final existing event '{current_event.title}'")
-
-            # Always save items for the final event (new or existing)
-            print(f"Debug: Found {len(current_items)} items to create for final event")
-            for item_data in current_items:
-                print(f"Debug: Creating final item with data: {item_data}")
+                # Create item
                 EventItem.objects.create(
                     event=current_event,
-                    **item_data
+                    title=item_data['title'],
+                    date=item_date,
+                    time=item_data.get('time', ''),
+                    description=item_data.get('description', ''),
+                    notes=item_data.get('notes', '')
                 )
                 items_created += 1
+                print(f"Debug: Created item '{item_data['title']}' for event '{event_title}'")
+
+            except ValueError as e:
+                print(f"Debug: Invalid date format for item '{item_data.get('title', 'Unknown')}': {item_data.get('date', 'No date')}")
+                continue
+            except Exception as e:
+                print(f"Debug: Error creating item '{item_data.get('title', 'Unknown')}': {str(e)}")
+                continue
 
         return JsonResponse({
             'success': True,
