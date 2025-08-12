@@ -405,21 +405,23 @@ function scrollToDate(dateStr) {
 }
 
 async function onCellHoverIn(e, dateStr) {
+  // Immediately preview border if drawing, do not wait for async work
+  if (state.drawEventId && e.currentTarget) {
+    const drawEv = state.events.find(ev => ev.id === state.drawEventId);
+    const color = drawEv?.color || '#7c5cff';
+    e.currentTarget.classList.add('draw-hover');
+    e.currentTarget.style.setProperty('--draw-border', color);
+  }
+
   if (!state.itemsCache.has(dateStr)) await loadItemsForDate(dateStr);
   const all = getCachedItemsForDate(dateStr);
   const useHighlights = state.highlightEventIds.size > 0;
   const itemsOnDate = useHighlights ? all.filter(it => state.highlightEventIds.has(it.event_id)) : all;
 
-  // If a draw event is active, preview border color on hover
-  if (state.drawEventId) {
-    const drawEv = state.events.find(ev => ev.id === state.drawEventId);
-    if (drawEv && e.currentTarget) {
-      e.currentTarget.classList.add('draw-hover');
-      e.currentTarget.style.setProperty('--draw-border', drawEv.color || '#888');
-    }
+  if (itemsOnDate.length === 0) {
+    // No tooltip if nothing to show; keep only draw border preview
+    return;
   }
-
-  if (itemsOnDate.length === 0) return;
 
   const lines = itemsOnDate.slice(0, 6).map(it => {
     const ev = state.events.find(e => e.id === it.event_id);
