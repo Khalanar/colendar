@@ -247,6 +247,16 @@ function renderDayItemsPanel() {
     });
     dayItemsListEl.appendChild(row);
   }
+
+  // Add "Add Item" button at the bottom
+  const addItemBtn = document.createElement('button');
+  addItemBtn.className = 'add-item-btn';
+  addItemBtn.innerHTML = '＋ Add Item';
+  addItemBtn.addEventListener('click', () => {
+    openItemDialog(null, state.dayItemsDate);
+  });
+  dayItemsListEl.appendChild(addItemBtn);
+
   // highlight the active cell
   document.querySelectorAll('.cell.day-active').forEach(el => el.classList.remove('day-active'));
   const activeCell = document.querySelector(`.cell[data-date="${state.dayItemsDate}"]`);
@@ -720,17 +730,68 @@ function openItemDialog(item, dateStr) {
   currentEditItemDate = dateStr;
   itemDialogTitle.textContent = item?.id ? 'Edit Item' : `New Item (${formatDate(dateStr)})`;
 
-  // Populate event dropdown
-  const eventSelect = document.getElementById('itemEvent');
-  eventSelect.innerHTML = '<option value="">Select an event...</option>';
+  // Populate custom event dropdown with color thumbnails
+  const eventContainer = document.getElementById('itemEventContainer');
+  const eventDisplay = document.getElementById('itemEventDisplay');
+  const eventDropdown = document.getElementById('itemEventDropdown');
+  const eventInput = document.getElementById('itemEvent');
+
+  // Clear previous content
+  eventDropdown.innerHTML = '';
+
+  // Create options with color thumbnails
   state.events.forEach(ev => {
-    const option = document.createElement('option');
-    option.value = ev.id;
-    option.textContent = ev.title;
+    const option = document.createElement('div');
+    option.className = 'select-option';
+    option.dataset.value = ev.id;
+    option.innerHTML = `
+      <span class="color-thumb" style="background: ${ev.color}"></span>
+      <span>${ev.title}</span>
+    `;
+
     if (item?.event_id === ev.id) {
-      option.selected = true;
+      option.classList.add('selected');
+      // Set the display
+      eventDisplay.innerHTML = `
+        <div class="selected-option">
+          <span class="color-thumb" style="background: ${ev.color}"></span>
+          <span>${ev.title}</span>
+        </div>
+      `;
+      eventInput.value = ev.id;
     }
-    eventSelect.appendChild(option);
+
+    option.addEventListener('click', () => {
+      // Update display
+      eventDisplay.innerHTML = `
+        <div class="selected-option">
+          <span class="color-thumb" style="background: ${ev.color}"></span>
+          <span>${ev.title}</span>
+        </div>
+      `;
+      eventInput.value = ev.id;
+
+      // Update selected state
+      eventDropdown.querySelectorAll('.select-option').forEach(opt => opt.classList.remove('selected'));
+      option.classList.add('selected');
+
+      // Close dropdown
+      eventContainer.classList.remove('open');
+    });
+
+    eventDropdown.appendChild(option);
+  });
+
+  // Handle dropdown toggle
+  eventDisplay.addEventListener('click', () => {
+    eventContainer.classList.toggle('open');
+  });
+
+  // Close dropdown when clicking outside
+  document.addEventListener('click', (e) => {
+    if (!eventContainer.contains(e.target)) {
+      eventContainer.classList.remove('open');
+    }
   });
 
   itemTitleInput.value = item?.title ?? '';
@@ -740,7 +801,7 @@ function openItemDialog(item, dateStr) {
 
   itemForm.onsubmit = async (e) => {
     e.preventDefault();
-    const selectedEventId = parseInt(eventSelect.value);
+    const selectedEventId = parseInt(eventInput.value);
 
     if (!selectedEventId) {
       alert('Please select an event');
@@ -777,17 +838,7 @@ function openItemDialog(item, dateStr) {
   itemDialog.showModal();
 }
 
-// Add event listener for the "Add Item" button
-const addItemBtn = document.getElementById('addItemBtn');
-if (addItemBtn) {
-  addItemBtn.addEventListener('click', () => {
-    if (state.dayItemsDate) {
-      openItemDialog(null, state.dayItemsDate);
-    } else {
-      alert('Please select a date first');
-    }
-  });
-}
+
 
 addEventBtn.addEventListener('click', () => openEventDialog(null));
 if (prevYearBtn) prevYearBtn.addEventListener('click', () => { state.year -= 1; ensureYearRendered(state.year); scrollToYear(state.year); });
