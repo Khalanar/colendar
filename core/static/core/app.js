@@ -531,16 +531,26 @@ function renderEventsList() {
     drawText.addEventListener('click', async (e) => {
       e.stopPropagation();
       if (state.drawEventId === ev.id) {
-        state.drawEventId = null; // Clear draw mode
+        // Clear draw mode for this event
+        state.drawEventId = null;
         drawText.textContent = 'Draw';
         drawText.classList.remove('drawing');
-        li.style.paddingLeft = '0px'; // Remove padding when not drawing
+        li.classList.remove('drawing-active');
       } else {
-        state.drawEventId = null; // Clear any existing draw mode
-        state.drawEventId = ev.id; // Set this event as draw mode
+        // Clear any existing draw mode from other events first
+        if (state.drawEventId) {
+          // Find and update the previously drawing event
+          const prevDrawingEvent = state.events.find(e => e.id === state.drawEventId);
+          if (prevDrawingEvent) {
+            // This will be handled when we re-render the events list
+          }
+        }
+
+        // Set this event as draw mode
+        state.drawEventId = ev.id;
         drawText.textContent = 'Drawing';
         drawText.classList.add('drawing');
-        li.style.paddingLeft = '80px'; // Add padding when drawing
+        li.classList.add('drawing-active');
       }
       await loadItemsForEvent(ev.id);
       paintCalendarSelections();
@@ -598,9 +608,9 @@ function renderEventsList() {
 
     if (state.highlightEventIds.has(ev.id)) li.classList.add('viewing');
 
-    // Set initial padding for events in drawing mode
+    // Set initial state for events in drawing mode
     if (state.drawEventId === ev.id) {
-      li.style.paddingLeft = '80px';
+      li.classList.add('drawing-active');
     }
 
     eventsListEl.appendChild(li);

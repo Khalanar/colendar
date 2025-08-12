@@ -707,8 +707,8 @@ menu button:active {
   border-color: var(--accent);
 }
 
-/* Show draw text on event row hover */
-.event-row:hover .draw-text {
+/* Show draw text on event row hover (only when not in drawing mode) */
+.event-row:hover .draw-text:not(.drawing) {
   left: 8px; /* Slide in from the left edge */
 }
 
@@ -728,16 +728,16 @@ menu button:active {
 
 .event-row:hover {
   background: var(--bg-hover);
-  padding-left: 80px; /* Push content to the right when draw text appears */
 }
 
-/* Keep content pushed when in drawing mode */
-.event-row .draw-text.drawing {
-  left: 8px;
+/* Add padding when hovering (for non-drawing events) */
+.event-row:hover:not(.drawing-active) {
+  padding-left: 80px;
 }
 
-.event-row .draw-text.drawing ~ * {
-  /* This will be handled by the padding-left on the parent */
+/* Add padding when in drawing mode */
+.event-row.drawing-active {
+  padding-left: 80px;
 }
 
 /* Ensure event actions don't interfere with draw text */
