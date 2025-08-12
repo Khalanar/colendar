@@ -353,7 +353,7 @@ function buildYearSection(year) {
       const splits = document.createElement('div'); splits.className = 'splits'; cell.appendChild(splits);
       cell.addEventListener('click', () => onCellClick(cell, dateStr));
       cell.addEventListener('mouseenter', (e) => { onCellHoverIn(e, dateStr); });
-      cell.addEventListener('mouseleave', () => hideTooltip());
+      cell.addEventListener('mouseleave', (e) => onCellHoverOut(e));
       cell.addEventListener('contextmenu', (e) => onCellRightClick(cell, dateStr, e));
       daysEl.appendChild(cell);
     }
@@ -409,6 +409,16 @@ async function onCellHoverIn(e, dateStr) {
   const all = getCachedItemsForDate(dateStr);
   const useHighlights = state.highlightEventIds.size > 0;
   const itemsOnDate = useHighlights ? all.filter(it => state.highlightEventIds.has(it.event_id)) : all;
+
+  // If a draw event is active, preview border color on hover
+  if (state.drawEventId) {
+    const drawEv = state.events.find(ev => ev.id === state.drawEventId);
+    if (drawEv && e.currentTarget) {
+      e.currentTarget.classList.add('draw-hover');
+      e.currentTarget.style.setProperty('--draw-border', drawEv.color || '#888');
+    }
+  }
+
   if (itemsOnDate.length === 0) return;
 
   const lines = itemsOnDate.slice(0, 6).map(it => {
@@ -419,9 +429,19 @@ async function onCellHoverIn(e, dateStr) {
     const desc = it.description ? `<div class=\"meta\">${escapeHtml(it.description)}</div>` : '';
     return `<div class=\"tip-item\"><span class=\"pill\" style=\"background:${color}\"></span><strong>${escapeHtml(evTitle)}</strong> — ${escapeHtml(it.title)}${time}${desc}</div>`;
   });
-  const more = itemsOnDate.length > 6 ? `<div class=\"meta\">+${itemsOnDate.length - 6} more…</div>` : '';
-  const html = `<h4>${formatDate(dateStr)}</h4>${lines.join('')}${more}`;
-  showTooltip(html, e.clientX, e.clientY);
+
+  const rect = e.clientX && e.clientY ? { x: e.clientX, y: e.clientY } : null;
+  if (rect) {
+    showTooltip(lines.join(''), rect.x, rect.y, 'above');
+  }
+}
+
+function onCellHoverOut(e) {
+  hideTooltip();
+  if (e && e.currentTarget) {
+    e.currentTarget.classList.remove('draw-hover');
+    e.currentTarget.style.removeProperty('--draw-border');
+  }
 }
 
 function paintCalendarSelections() {

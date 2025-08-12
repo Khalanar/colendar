@@ -261,7 +261,12 @@ body {
 .cell .splits { position: absolute; inset: 0; display: flex; z-index: 1; pointer-events: none; }
 .cell .splits .split { height: 100%; }
 .cell .empty { position: absolute; inset: 0; display: grid; place-items: center; color: #334155; font-size: 10px; }
-
+.cell.draw-hover {
+  outline: 2px solid var(--draw-border, #7c5cff);
+  outline-offset: 0;
+}
+/* Ensure hover outline sits above splits */
+.cell.draw-hover { z-index: 2; }
 
 
 /* Events list container spacing */
