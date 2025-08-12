@@ -193,8 +193,8 @@ SOCIALACCOUNT_LOGIN_ON_GET = True
 SOCIALACCOUNT_PROVIDERS = {
     'google': {
         'APP': {
-            'client_id': os.environ.get('GOOGLE_CLIENT_ID', '86953640345-5olef194abdmr8n14li7t4b41rkfupk5.apps.googleusercontent.com'),
-            'secret': os.environ.get('GOOGLE_CLIENT_SECRET', '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'),
+            'client_id': os.environ.get('GOOGLE_CLIENT_ID'),
+            'secret': os.environ.get('GOOGLE_CLIENT_SECRET'),
             'key': ''
         },
         'SCOPE': [
