@@ -327,7 +327,7 @@ body {
 /* Event row styling */
 .event-row {
   position: relative;
-  transition: background .12s ease, transform .08s ease, padding-left .3s ease;
+  transition: background .12s ease, transform .08s ease;
   padding-left: 20px; /* Add 20px left padding to each event row */
 }
 
@@ -335,15 +335,7 @@ body {
   background: var(--bg-hover);
 }
 
-/* Add padding when hovering (for non-drawing events) */
-.event-row:hover:not(.drawing-active) {
-  padding-left: 80px;
-}
-
-/* Add padding when in drawing mode */
-.event-row.drawing-active {
-  padding-left: 80px;
-}
+/* No sliding padding change on hover or drawing-active */
 
 /* Ensure event actions don't interfere with draw text */
 .event-actions {
