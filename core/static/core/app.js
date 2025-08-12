@@ -613,7 +613,8 @@ function renderEventsList() {
 
     const color = document.createElement('div');
     color.className = 'event-color';
-    color.style.background = ev.color;
+    // mirror thumb behavior: styling via CSS var
+    li.style.setProperty('--evcolor', ev.color || '#666');
 
     const title = document.createElement('div');
     title.className = 'event-title';
@@ -651,6 +652,17 @@ function renderEventsList() {
     if (state.drawEventId === ev.id) {
       li.classList.add('drawing-active');
     }
+
+    // Add handlers to mirror thumb behavior
+    color.addEventListener('click', (e) => {
+      e.stopPropagation();
+      toggleEventHighlight(ev.id);
+    });
+    color.addEventListener('mouseenter', (e) => {
+      const html = `<strong>${escapeHtml(ev.title || 'Event')}</strong>`;
+      showTooltip(html, e.clientX, e.clientY, 'above');
+    });
+    color.addEventListener('mouseleave', () => hideTooltip());
 
     eventsListEl.appendChild(li);
   });

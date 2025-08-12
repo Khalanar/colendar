@@ -175,6 +175,27 @@ body {
   transition: background 0.2s ease, border-color 0.2s ease;
 }
 
+/* Event color square mirrors header thumbs */
+.event-color {
+  width: 12px;
+  height: 12px;
+  border-radius: 3px;
+  display: inline-block;
+  position: relative;
+  z-index: 1;
+  box-shadow: 0 0 0 1px rgba(0,0,0,0.2) inset;
+  border: 2px solid var(--evcolor, #666);
+  background: transparent;
+  transition: background 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
+}
+.event-row.viewing .event-color {
+  background: var(--evcolor, #475569);
+}
+.event-row .event-color:hover {
+  transform: scale(1.1);
+  box-shadow: 0 0 0 2px rgba(255,255,255,0.3);
+}
+
 .event-row {
   display: grid;
   grid-template-columns: 16px 1fr auto;
