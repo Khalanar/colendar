@@ -254,6 +254,19 @@ function renderDayItemsPanel() {
       renderItemsPanel();
       renderDayItemsPanel();
     });
+    // Inline edit on dblclick of day panel item title
+    const tEl = row.querySelector('.title');
+    tEl.addEventListener('dblclick', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      startInlineEdit(tEl, it.title, async (newTitle) => {
+        await api.patch(`/api/items/${it.id}`, { title: newTitle });
+        await loadItemsForDate(state.dayItemsDate);
+        paintCalendarSelections();
+        renderItemsPanel();
+        renderDayItemsPanel();
+      });
+    });
     dayItemsListEl.appendChild(row);
   }
 
@@ -267,11 +280,6 @@ function renderDayItemsPanel() {
     openItemDialog(null, state.dayItemsDate);
   });
   dayItemsListEl.appendChild(addItemLink);
-
-  // highlight the active cell
-  document.querySelectorAll('.cell.day-active').forEach(el => el.classList.remove('day-active'));
-  const activeCell = document.querySelector(`.cell[data-date="${state.dayItemsDate}"]`);
-  if (activeCell) activeCell.classList.add('day-active');
 }
 
 if (closeDayPanelBtn) closeDayPanelBtn.addEventListener('click', () => { state.dayItemsDate = null; renderDayItemsPanel(); });
@@ -566,6 +574,19 @@ function renderSelectedEventThumbs() {
         toggleEventHighlight(ev.id);
       });
 
+      // Double-click: inline edit event title (delegates to the row title editor)
+      t.addEventListener('dblclick', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        const row = document.querySelector(`[data-event-id="${ev.id}"] .event-title`);
+        if (row) {
+          startInlineEdit(row, ev.title, async (newTitle) => {
+            await api.patch(`/api/events/${ev.id}`, { title: newTitle });
+            await refreshEvents();
+          });
+        }
+      });
+
       // Right-click: set this event as the active drawing event
       t.addEventListener('contextmenu', async (e) => {
         e.preventDefault();
@@ -616,6 +637,42 @@ function toggleEventHighlight(eventId) {
   renderItemsPanel();
 }
 
+// Generic inline edit utility
+function startInlineEdit(targetEl, initialValue, onSave) {
+  const input = document.createElement('input');
+  input.type = 'text';
+  input.value = initialValue ?? '';
+  input.className = 'inline-edit';
+  input.style.width = '100%';
+  input.style.boxSizing = 'border-box';
+  input.addEventListener('click', (e) => { e.stopPropagation(); });
+  input.addEventListener('dblclick', (e) => { e.stopPropagation(); });
+  const restore = (text) => {
+    targetEl.textContent = text;
+  };
+  input.addEventListener('keydown', async (e) => {
+    if (e.key === 'Enter') {
+      const val = input.value.trim();
+      if (val && val !== initialValue) {
+        await onSave(val);
+        restore(val);
+      } else {
+        restore(initialValue);
+      }
+    } else if (e.key === 'Escape') {
+      restore(initialValue);
+    }
+  });
+  input.addEventListener('blur', () => {
+    // Do not auto-save on blur per requirement; just restore
+    restore(initialValue);
+  });
+  // Swap content
+  targetEl.replaceChildren(input);
+  input.focus();
+  input.select();
+}
+
 function isolateEventHighlight(eventId) {
   // Replace current selection with only this event
   state.highlightEventIds = new Set([eventId]);
@@ -664,6 +721,16 @@ function renderEventsList() {
     const title = document.createElement('div');
     title.className = 'event-title';
     title.textContent = ev.title;
+
+    // Inline edit on dblclick
+    title.addEventListener('dblclick', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      startInlineEdit(title, ev.title, async (newTitle) => {
+        await api.patch(`/api/events/${ev.id}`, { title: newTitle });
+        await refreshEvents();
+      });
+    });
 
     // Create event actions
     const actions = document.createElement('div');
@@ -735,6 +802,15 @@ function renderEventsList() {
         toggleEventHighlight(ev.id);
       }
     });
+    // Allow dblclick on the small color box to edit title too
+    color.addEventListener('dblclick', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      startInlineEdit(title, ev.title, async (newTitle) => {
+        await api.patch(`/api/events/${ev.id}`, { title: newTitle });
+        await refreshEvents();
+      });
+    });
     color.addEventListener('mouseenter', (e) => {
       const html = `<strong>${escapeHtml(ev.title || 'Event')}</strong>`;
       showTooltip(html, e.clientX, e.clientY, 'above');
@@ -795,6 +871,20 @@ function renderItemsPanel() {
 
     div.querySelector('[data-action="edit"]').addEventListener('click', async () => { openItemDialog(it, it._date); });
     div.querySelector('[data-action="delete"]').addEventListener('click', async () => { await api.del(`/api/items/${it.id}`); await loadItemsForDate(it._date); paintCalendarSelections(); renderItemsPanel(); });
+
+    // Inline edit on dblclick of title
+    const titleEl = div.querySelector('.title');
+    titleEl.addEventListener('dblclick', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      startInlineEdit(titleEl, it.title, async (newTitle) => {
+        await api.patch(`/api/items/${it.id}`, { title: newTitle });
+        await loadItemsForDate(it._date);
+        paintCalendarSelections();
+        renderItemsPanel();
+        if (state.dayItemsDate === it._date) renderDayItemsPanel();
+      });
+    });
 
     itemsListEl.appendChild(div);
   }
