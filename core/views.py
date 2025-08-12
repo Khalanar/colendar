@@ -193,10 +193,14 @@ def _json(request: HttpRequest) -> dict:
 
 @login_required
 @csrf_exempt
-def events_api(request):
+def events_api(request, event_id=None):
     if request.method == 'GET':
-        events = Event.objects.filter(user=request.user)
-        return JsonResponse([event.to_dict() for event in events], safe=False)
+        if event_id:
+            event = get_object_or_404(Event, id=event_id, user=request.user)
+            return JsonResponse(event.to_dict())
+        else:
+            events = Event.objects.filter(user=request.user)
+            return JsonResponse([event.to_dict() for event in events], safe=False)
     elif request.method == 'POST':
         data = json.loads(request.body)
         event = Event.objects.create(
@@ -213,10 +217,17 @@ def events_api(request):
         event.save()
         return JsonResponse(event.to_dict())
     elif request.method == 'DELETE':
-        data = json.loads(request.body)
-        event = Event.objects.get(id=data['id'], user=request.user)
-        event.delete()
-        return JsonResponse({}, status=204)
+        if event_id:
+            # Delete specific event
+            event = get_object_or_404(Event, id=event_id, user=request.user)
+            event.delete()
+            return JsonResponse({}, status=204)
+        else:
+            # Delete event from request body (for backward compatibility)
+            data = json.loads(request.body)
+            event = Event.objects.get(id=data['id'], user=request.user)
+            event.delete()
+            return JsonResponse({}, status=204)
 
 # @login_required
 def event_detail(request: HttpRequest, event_id: int):
