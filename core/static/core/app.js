@@ -1583,6 +1583,9 @@ async function boot() {
   const now = new Date();
   const todayStr = toDateStr(now.getFullYear(), now.getMonth(), now.getDate());
 
+  // Scroll to today on initial load
+  scrollToDate(todayStr);
+
   // Load items for highlighted events (including preselected ones)
   for (const id of state.highlightEventIds) {
     try {
