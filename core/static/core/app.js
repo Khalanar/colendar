@@ -44,6 +44,7 @@ let state = {
   dayItemsDate: null,
 };
 const HIGHLIGHT_KEY = 'highlightEventIds';
+const ORDER_KEY = 'eventOrder';
 
 const calendarEl = document.getElementById('calendar');
 const panelEl = document.querySelector('.calendar-panel');
@@ -622,6 +623,8 @@ function renderSelectedEventThumbs() {
       t.style.cursor = 'pointer';
       t.setAttribute('aria-label', ev.title || 'Event');
       t.setAttribute('role', 'img');
+      t.setAttribute('data-event-id', String(ev.id));
+      t.draggable = true;
 
       // If this is the HEADER container and this event is the active drawing event, add underline indicator
       if (container === eventsThumbsEl && state.drawEventId === ev.id) {
@@ -634,9 +637,6 @@ function renderSelectedEventThumbs() {
         e.stopPropagation();
         toggleEventHighlight(ev.id);
       });
-
-      // Double-click: do NOT open color editor on header thumbnails per UX
-      // (row `.event-color` squares handle editing instead)
 
       // Right-click: set this event as the active drawing event
       t.addEventListener('contextmenu', async (e) => {
@@ -656,6 +656,21 @@ function renderSelectedEventThumbs() {
         showTooltip(html, e.clientX, e.clientY, 'above');
       });
       t.addEventListener('mouseleave', hideTooltip);
+
+      // DnD handlers (thumbs)
+      t.addEventListener('dragstart', (e) => {
+        try { e.dataTransfer.setData('text/event-id', String(ev.id)); } catch {}
+        e.dataTransfer.effectAllowed = 'move';
+      });
+      t.addEventListener('dragover', (e) => { e.preventDefault(); e.dataTransfer.dropEffect = 'move'; });
+      t.addEventListener('drop', (e) => {
+        e.preventDefault();
+        const srcIdStr = (e.dataTransfer && e.dataTransfer.getData('text/event-id')) || '';
+        const srcId = Number(srcIdStr);
+        const dstId = ev.id;
+        if (!srcId || srcId === dstId) return;
+        reorderEvents(srcId, dstId);
+      });
 
       container.appendChild(t);
     });
@@ -915,12 +930,65 @@ function restoreHighlightState() {
   } catch {}
 }
 
+// Order persistence helpers
+function loadEventOrder() {
+  try {
+    const raw = localStorage.getItem(ORDER_KEY);
+    if (!raw) return null;
+    const arr = JSON.parse(raw);
+    return Array.isArray(arr) ? arr.filter(n => Number.isInteger(n)) : null;
+  } catch { return null; }
+}
+
+function saveEventOrder(orderIds) {
+  try { localStorage.setItem(ORDER_KEY, JSON.stringify(orderIds)); } catch {}
+}
+
+function applySavedOrderToEvents() {
+  const saved = loadEventOrder();
+  if (!saved || saved.length === 0) return;
+  const idToEvent = new Map(state.events.map(e => [e.id, e]));
+  const ordered = [];
+  for (const id of saved) {
+    const ev = idToEvent.get(id);
+    if (ev) ordered.push(ev);
+  }
+  // append any new events not in saved order at the end
+  for (const ev of state.events) {
+    if (!saved.includes(ev.id)) ordered.push(ev);
+  }
+  state.events = ordered;
+}
+
+function deriveAndSaveOrderFromState() {
+  const ids = state.events.map(e => e.id);
+  saveEventOrder(ids);
+}
+
+function reorderEvents(sourceId, targetId) {
+  if (sourceId === targetId) return;
+  const ids = state.events.map(e => e.id);
+  const fromIdx = ids.indexOf(sourceId);
+  const toIdx = ids.indexOf(targetId);
+  if (fromIdx === -1 || toIdx === -1) return;
+  ids.splice(toIdx, 0, ids.splice(fromIdx, 1)[0]);
+  // Rebuild state.events according to new order
+  const idToEvent = new Map(state.events.map(e => [e.id, e]));
+  state.events = ids.map(id => idToEvent.get(id)).filter(Boolean);
+  saveEventOrder(ids);
+  renderEventsList();
+  renderSelectedEventThumbs();
+  paintCalendarSelections();
+  renderItemsPanel();
+}
+
 function renderEventsList() {
   eventsListEl.innerHTML = '';
   state.events.forEach(ev => {
     const li = document.createElement('li');
     li.className = 'event-row';
     li.setAttribute('data-event-id', ev.id);
+    li.draggable = true;
 
     // No left sliding draw label; actions live on the right
 
@@ -1025,6 +1093,21 @@ function renderEventsList() {
       showTooltip(html, e.clientX, e.clientY, 'above');
     });
     color.addEventListener('mouseleave', () => hideTooltip());
+
+    // DnD handlers (rows)
+    li.addEventListener('dragstart', (e) => {
+      try { e.dataTransfer.setData('text/event-id', String(ev.id)); } catch {}
+      e.dataTransfer.effectAllowed = 'move';
+    });
+    li.addEventListener('dragover', (e) => { e.preventDefault(); e.dataTransfer.dropEffect = 'move'; });
+    li.addEventListener('drop', (e) => {
+      e.preventDefault();
+      const srcIdStr = (e.dataTransfer && e.dataTransfer.getData('text/event-id')) || '';
+      const srcId = Number(srcIdStr);
+      const dstId = ev.id;
+      if (!srcId || srcId === dstId) return;
+      reorderEvents(srcId, dstId);
+    });
 
     eventsListEl.appendChild(li);
   });
@@ -1337,6 +1420,14 @@ if (nextYearBtn) nextYearBtn.addEventListener('click', () => { state.year += 1; 
 async function refreshEvents() {
   const response = await api.get('/api/events');
   state.events = response;
+
+  // Apply saved order if present; otherwise save current order as baseline
+  const existingOrder = loadEventOrder();
+  if (existingOrder && existingOrder.length > 0) {
+    applySavedOrderToEvents();
+  } else {
+    deriveAndSaveOrderFromState();
+  }
 
   // Handle preselected events for new users
   if (window.preselectedEventIds && window.preselectedEventIds.length > 0) {
