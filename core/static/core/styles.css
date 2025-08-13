@@ -247,6 +247,21 @@ body {
   border-color: var(--evcolor, #666);
 }
 
+/* Drag-and-drop indicators */
+.drop-indicator {
+  height: 2px;
+  background: var(--accent, #8b5cf6);
+  margin: 0 0;
+}
+.drop-indicator-thumb {
+  display: inline-block;
+  width: 0;
+  height: 16px;
+  border-left: 2px solid var(--accent, #8b5cf6);
+  margin: 0 2px;
+  vertical-align: middle;
+}
+
 /* Action buttons (Edit/Delete etc.) */
 .event-actions button,
 .item .actions button {

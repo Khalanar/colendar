@@ -46,6 +46,9 @@ let state = {
 const HIGHLIGHT_KEY = 'highlightEventIds';
 const ORDER_KEY = 'eventOrder';
 
+// Drag-and-drop transient state
+let dnd = { draggingId: null, indicatorRow: null, indicatorThumb: null };
+
 const calendarEl = document.getElementById('calendar');
 const panelEl = document.querySelector('.calendar-panel');
 const currentYearEl = document.getElementById('currentYear');
@@ -602,6 +605,9 @@ async function toggleEventHighlight(eventId) {
     }
   }
 
+  // Ensure list thumbnails mirror state even if DOM changed
+  highlightViewingEvent();
+
   // Ensure items panel reflects the current selection
   renderItemsPanel();
 }
@@ -659,17 +665,47 @@ function renderSelectedEventThumbs() {
 
       // DnD handlers (thumbs)
       t.addEventListener('dragstart', (e) => {
+        dnd.draggingId = ev.id;
         try { e.dataTransfer.setData('text/event-id', String(ev.id)); } catch {}
         e.dataTransfer.effectAllowed = 'move';
       });
-      t.addEventListener('dragover', (e) => { e.preventDefault(); e.dataTransfer.dropEffect = 'move'; });
+      t.addEventListener('dragend', () => {
+        dnd.draggingId = null;
+        if (dnd.indicatorThumb && dnd.indicatorThumb.parentNode) dnd.indicatorThumb.parentNode.removeChild(dnd.indicatorThumb);
+        dnd.indicatorThumb = null;
+      });
+      t.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        e.dataTransfer.dropEffect = 'move';
+        const rect = t.getBoundingClientRect();
+        const before = e.clientX < rect.left + rect.width / 2;
+        if (!dnd.indicatorThumb) {
+          const ind = document.createElement('span');
+          ind.className = 'drop-indicator-thumb';
+          dnd.indicatorThumb = ind;
+        }
+        // Place indicator before or after this thumb
+        if (before) {
+          if (t.parentNode.firstChild !== dnd.indicatorThumb || dnd.indicatorThumb.nextSibling !== t) {
+            t.parentNode.insertBefore(dnd.indicatorThumb, t);
+          }
+        } else {
+          if (t.nextSibling !== dnd.indicatorThumb) {
+            t.parentNode.insertBefore(dnd.indicatorThumb, t.nextSibling);
+          }
+        }
+      });
       t.addEventListener('drop', (e) => {
         e.preventDefault();
-        const srcIdStr = (e.dataTransfer && e.dataTransfer.getData('text/event-id')) || '';
+        const srcIdStr = (e.dataTransfer && e.dataTransfer.getData('text/event-id')) || String(dnd.draggingId || '');
         const srcId = Number(srcIdStr);
         const dstId = ev.id;
         if (!srcId || srcId === dstId) return;
-        reorderEvents(srcId, dstId);
+        const rect = t.getBoundingClientRect();
+        const before = e.clientX < rect.left + rect.width / 2;
+        reorderEvents(srcId, dstId, before ? 'before' : 'after');
+        if (dnd.indicatorThumb && dnd.indicatorThumb.parentNode) dnd.indicatorThumb.parentNode.removeChild(dnd.indicatorThumb);
+        dnd.indicatorThumb = null;
       });
 
       container.appendChild(t);
@@ -965,13 +1001,16 @@ function deriveAndSaveOrderFromState() {
   saveEventOrder(ids);
 }
 
-function reorderEvents(sourceId, targetId) {
+function reorderEvents(sourceId, targetId, position = 'before') {
   if (sourceId === targetId) return;
   const ids = state.events.map(e => e.id);
   const fromIdx = ids.indexOf(sourceId);
-  const toIdx = ids.indexOf(targetId);
+  let toIdx = ids.indexOf(targetId);
   if (fromIdx === -1 || toIdx === -1) return;
-  ids.splice(toIdx, 0, ids.splice(fromIdx, 1)[0]);
+  // Adjust target index for after insertion if needed
+  if (position === 'after') toIdx = toIdx + (fromIdx < toIdx ? 0 : 1);
+  const [moved] = ids.splice(fromIdx, 1);
+  ids.splice(toIdx, 0, moved);
   // Rebuild state.events according to new order
   const idToEvent = new Map(state.events.map(e => [e.id, e]));
   state.events = ids.map(id => idToEvent.get(id)).filter(Boolean);
@@ -1096,17 +1135,46 @@ function renderEventsList() {
 
     // DnD handlers (rows)
     li.addEventListener('dragstart', (e) => {
+      dnd.draggingId = ev.id;
       try { e.dataTransfer.setData('text/event-id', String(ev.id)); } catch {}
       e.dataTransfer.effectAllowed = 'move';
     });
-    li.addEventListener('dragover', (e) => { e.preventDefault(); e.dataTransfer.dropEffect = 'move'; });
+    li.addEventListener('dragend', () => {
+      dnd.draggingId = null;
+      if (dnd.indicatorRow && dnd.indicatorRow.parentNode) dnd.indicatorRow.parentNode.removeChild(dnd.indicatorRow);
+      dnd.indicatorRow = null;
+    });
+    li.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      e.dataTransfer.dropEffect = 'move';
+      const rect = li.getBoundingClientRect();
+      const before = e.clientY < rect.top + rect.height / 2;
+      if (!dnd.indicatorRow) {
+        const ind = document.createElement('div');
+        ind.className = 'drop-indicator';
+        dnd.indicatorRow = ind;
+      }
+      if (before) {
+        if (li.previousSibling !== dnd.indicatorRow) {
+          li.parentNode.insertBefore(dnd.indicatorRow, li);
+        }
+      } else {
+        if (li.nextSibling !== dnd.indicatorRow) {
+          li.parentNode.insertBefore(dnd.indicatorRow, li.nextSibling);
+        }
+      }
+    });
     li.addEventListener('drop', (e) => {
       e.preventDefault();
-      const srcIdStr = (e.dataTransfer && e.dataTransfer.getData('text/event-id')) || '';
+      const srcIdStr = (e.dataTransfer && e.dataTransfer.getData('text/event-id')) || String(dnd.draggingId || '');
       const srcId = Number(srcIdStr);
       const dstId = ev.id;
       if (!srcId || srcId === dstId) return;
-      reorderEvents(srcId, dstId);
+      const rect = li.getBoundingClientRect();
+      const before = e.clientY < rect.top + rect.height / 2;
+      reorderEvents(srcId, dstId, before ? 'before' : 'after');
+      if (dnd.indicatorRow && dnd.indicatorRow.parentNode) dnd.indicatorRow.parentNode.removeChild(dnd.indicatorRow);
+      dnd.indicatorRow = null;
     });
 
     eventsListEl.appendChild(li);
