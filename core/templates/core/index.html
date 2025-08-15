@@ -15,7 +15,7 @@
     <div id="app" data-preselected-events="{% if preselected_event_ids %}{{ preselected_event_ids|safe }}{% else %}null{% endif %}">
       <header class="topbar">
         <div class="topbar-left">
-          <h1>Colendar</h1>
+          <h1>Colendar{% if debug %} (local){% endif %}</h1>
         </div>
         <div class="topbar-right">
           {% if user.is_authenticated %}

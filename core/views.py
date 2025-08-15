@@ -10,6 +10,7 @@ from django.http import HttpRequest, HttpResponse, JsonResponse, HttpResponseNot
 from django.shortcuts import render, get_object_or_404, redirect
 from django.views.decorators.csrf import csrf_exempt
 from django.contrib import messages
+from django.conf import settings
 import time
 
 from .models import Event, EventItem
@@ -153,7 +154,8 @@ def index(request: HttpRequest) -> HttpResponse:
 
     context = {
         'timestamp': int(time.time()),  # Cache busting for JavaScript
-        'preselected_event_ids': preselected_event_ids
+        'preselected_event_ids': preselected_event_ids,
+        'debug': settings.DEBUG
     }
     return render(request, "core/index.html", context)
 
