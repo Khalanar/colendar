@@ -1448,6 +1448,12 @@ function updateMultiSelection() {
     currentDate.setDate(currentDate.getDate() + 1);
   }
 
+  // Ensure sidebar is expanded for multi-selection
+  if (layoutEl.classList.contains('sidebar-collapsed')) {
+    layoutEl.classList.remove('sidebar-collapsed');
+    localStorage.setItem('sidebarCollapsed', '0');
+  }
+
   // Load items for all selected dates and update UI
   loadSelectedDatesItems();
 }
