@@ -1377,15 +1377,8 @@ function onCellClick(cell, dateStr, event) {
     // Update UI based on selection count
     if (state.selectedDates.size === 0) {
       clearMultiSelection();
-    } else if (state.selectedDates.size === 1) {
-      // Single selection
-      const singleDate = Array.from(state.selectedDates)[0];
-      state.dayItemsDate = singleDate;
-      loadItemsForDate(singleDate).then(() => {
-        renderDayItemsPanel();
-      });
     } else {
-      // Multi-selection
+      // Always use multi-selection panel for Command+Click selections
       loadSelectedDatesItems();
     }
 
@@ -1499,6 +1492,66 @@ function updateMultiSelection() {
   loadSelectedDatesItems();
 }
 
+function renderItemsInPanel(items, dateStr) {
+  if (!dayItemsListEl) return;
+
+  dayItemsListEl.innerHTML = '';
+
+  if (items.length === 0) {
+    const noItemsEl = document.createElement('div');
+    noItemsEl.className = 'empty-day';
+    noItemsEl.textContent = 'Nothing to see here!';
+    dayItemsListEl.appendChild(noItemsEl);
+  } else {
+    items.forEach(item => {
+      const ev = state.events.find(e => e.id === item.event_id);
+      const row = document.createElement('div');
+      row.className = 'item';
+      row.innerHTML = `
+        <div class="row">
+          <div class="meta">
+            <span class="event-color-indicator" style="background:${ev?.color ?? '#999'}"></span>
+            ${escapeHtml(ev?.title ?? 'Event')} • ${formatDate(dateStr)}
+          </div>
+          <div class="actions">
+            <button data-action="edit">Edit</button>
+            <button data-action="delete">Delete</button>
+          </div>
+        </div>
+        <div class="title">
+          <span>${escapeHtml(item.title)}</span>
+          ${item.time ? `<span class="item-time">${escapeHtml(item.time)}</span>` : ''}
+        </div>
+        ${item.notes ? `<div class=\"meta\">${marked.parse(item.notes)}</div>` : ''}
+      `;
+
+      const editBtn = row.querySelector('[data-action="edit"]');
+      const delBtn = row.querySelector('[data-action="delete"]');
+      if (editBtn) editBtn.addEventListener('click', () => openItemDialog(item, dateStr));
+      if (delBtn) delBtn.addEventListener('click', async () => {
+        await api.del(`/api/items/${item.id}`);
+        await loadItemsForDate(dateStr);
+        paintCalendarSelections();
+        renderItemsPanel();
+        renderMultiSelectionPanel();
+      });
+
+      dayItemsListEl.appendChild(row);
+    });
+  }
+
+  // Add "Add Item" link
+  const addItemLink = document.createElement('a');
+  addItemLink.className = 'add-item-link';
+  addItemLink.innerHTML = '＋ Add Item';
+  addItemLink.href = '#';
+  addItemLink.addEventListener('click', (e) => {
+    e.preventDefault();
+    openItemDialog(null, dateStr);
+  });
+  dayItemsListEl.appendChild(addItemLink);
+}
+
 function updateVisualSelection() {
   // Clear previous visual selection
   document.querySelectorAll('.cell.day-active').forEach(el => el.classList.remove('day-active'));
@@ -1534,10 +1587,24 @@ function renderMultiSelectionPanel() {
   }
 
   if (state.selectedDates.size === 1) {
-    // Single selection, show normal day panel
+    // Single Command+Click selection, show single date in multi-selection format
     const dateStr = Array.from(state.selectedDates)[0];
-    state.dayItemsDate = dateStr;
-    renderDayItemsPanel();
+
+    // Show multi-selection panel
+    if (dayPanelEl) {
+      dayPanelEl.style.display = 'block';
+    }
+
+    // Update panel title to show single date
+    if (dayPanelTitleEl) {
+      dayPanelTitleEl.textContent = formatDate(dateStr);
+    }
+
+    // Load and display items for the single date
+    loadItemsForDate(dateStr).then(() => {
+      const items = state.itemsCache.get(dateStr) || [];
+      renderItemsInPanel(items, dateStr);
+    });
     return;
   }
 
