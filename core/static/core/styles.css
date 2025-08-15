@@ -322,7 +322,6 @@ body {
 
 /* Multi-selection styles */
 .cell.multi-selected {
-  background: rgba(124, 92, 255, 0.2);
   border: 2px solid var(--accent);
 }
 

@@ -131,12 +131,18 @@ function formatDate(dateStr) {
   const teen = day % 100;
   const last = day % 10;
   let suffix = 'th';
-  if (teen < 11 || teen > 13) {
-    if (last === 1) suffix = 'st';
-    else if (last === 2) suffix = 'nd';
-    else if (last === 3) suffix = 'rd';
+
+  if (teen >= 11 && teen <= 13) {
+    suffix = 'th';
+  } else if (last === 1) {
+    suffix = 'st';
+  } else if (last === 2) {
+    suffix = 'nd';
+  } else if (last === 3) {
+    suffix = 'rd';
   }
-  return `${day}${suffix} ${month}, ${y}`;
+
+  return `${day}${suffix} ${month}`;
 }
 // Color utilities for contrast decisions
 function hexToRgb(hex) {
@@ -1487,7 +1493,7 @@ function renderMultiSelectionPanel() {
   const dates = Array.from(state.selectedDates).sort();
   const startDate = formatDate(dates[0]);
   const endDate = formatDate(dates[dates.length - 1]);
-  const title = dates.length === 2 ? `${startDate} - ${endDate}` : `${startDate} to ${endDate} (${dates.length} days)`;
+  const title = dates.length === 2 ? `${startDate} - ${endDate}` : `From ${startDate} to ${endDate}`;
 
   if (dayPanelTitleEl) {
     dayPanelTitleEl.textContent = title;
@@ -1517,13 +1523,41 @@ function renderMultiSelectionPanel() {
 
     if (allItems.length === 0) {
       const noItemsEl = document.createElement('div');
-      noItemsEl.className = 'no-items';
+      noItemsEl.className = 'empty-day';
       noItemsEl.textContent = 'No items in selected range';
       dayItemsListEl.appendChild(noItemsEl);
     } else {
       allItems.forEach(item => {
-        const itemEl = createItemElement(item);
-        dayItemsListEl.appendChild(itemEl);
+        const ev = state.events.find(e => e.id === item.event_id);
+        const row = document.createElement('div');
+        row.className = 'item';
+        row.innerHTML = `
+          <div class="row">
+            <div class="meta">
+              <span style="display:inline-block;width:10px;height:10px;background:${ev?.color ?? '#999'};border-radius:2px;margin-right:6px"></span>
+              ${escapeHtml(ev?.title ?? 'Event')} • ${formatDate(item._date)}${item.time ? ' • ' + escapeHtml(item.time) : ''}
+            </div>
+            <div class="actions">
+              <button data-action="edit">Edit</button>
+              <button data-action="delete">Delete</button>
+            </div>
+          </div>
+          <div class="title">${escapeHtml(item.title)}</div>
+          ${item.notes ? `<div class=\"meta\">${escapeHtml(item.notes)}</div>` : ''}
+        `;
+
+        const editBtn = row.querySelector('[data-action="edit"]');
+        const delBtn = row.querySelector('[data-action="delete"]');
+        if (editBtn) editBtn.addEventListener('click', () => openItemDialog(item, item._date));
+        if (delBtn) delBtn.addEventListener('click', async () => {
+          await api.del(`/api/items/${item.id}`);
+          await loadItemsForDate(item._date);
+          paintCalendarSelections();
+          renderItemsPanel();
+          renderMultiSelectionPanel();
+        });
+
+        dayItemsListEl.appendChild(row);
       });
     }
 
