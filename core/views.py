@@ -355,7 +355,6 @@ def items_collection(request: HttpRequest):
             date=parsed_date,
             title=data.get("title") or "",
             time=data.get("time"),
-            description=data.get("description"),
             notes=data.get("notes"),
         )
         return JsonResponse(item.to_dict(), status=201)
@@ -368,9 +367,18 @@ def item_detail(request: HttpRequest, item_id: int):
     item = get_object_or_404(EventItem, id=item_id, event__user=request.user)
     if request.method == "PATCH":
         data = _json(request)
-        for field in ("title", "time", "description", "notes"):
+        for field in ("title", "time", "notes"):
             if field in data:
                 setattr(item, field, data[field])
+
+        # Handle date field separately since it needs parsing
+        if "date" in data:
+            try:
+                parsed_date = datetime.strptime(data["date"], "%Y-%m-%d").date()
+                item.date = parsed_date
+            except Exception:
+                return JsonResponse({"detail": "Invalid date format, expected YYYY-MM-DD"}, status=422)
+
         item.save()
         return JsonResponse(item.to_dict())
     if request.method == "DELETE":
@@ -399,7 +407,6 @@ def export_event(request, event_id):
             'title': item.title,
             'date': item.date.strftime('%Y-%m-%d'),
             'time': item.time or '',
-            'description': item.description or '',
             'notes': item.notes or ''
         }
         export_data['items'].append(item_data)

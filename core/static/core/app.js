@@ -83,9 +83,12 @@ const itemDialog = document.getElementById('itemDialog');
 const itemForm = document.getElementById('itemForm');
 const itemDialogTitle = document.getElementById('itemDialogTitle');
 const itemTitleInput = document.getElementById('itemTitle');
+const itemDateInput = document.getElementById('itemDate');
 const itemTimeInput = document.getElementById('itemTime');
-const itemDescriptionInput = document.getElementById('itemDescription');
 const itemNotesInput = document.getElementById('itemNotes');
+const cancelItemBtn = document.getElementById('cancelItem');
+const toggleMarkdownBtn = document.getElementById('toggleMarkdown');
+const markdownPreview = document.getElementById('markdownPreview');
 
 let currentEditItemDate = null; // YYYY-MM-DD for edit/create dialog
 
@@ -154,6 +157,71 @@ function relativeLuminance({ r, g, b }) {
   const B = srgbToLinear(b);
   return 0.2126 * R + 0.7152 * G + 0.0722 * B; // 0..1
 }
+
+// Markdown functionality
+function setupMarkdownToggle() {
+  if (!toggleMarkdownBtn || !itemNotesInput || !markdownPreview) return;
+
+  let isPreviewMode = false;
+
+  toggleMarkdownBtn.addEventListener('click', () => {
+    isPreviewMode = !isPreviewMode;
+
+    if (isPreviewMode) {
+      // Switch to preview mode
+      const markdownText = itemNotesInput.value;
+      const htmlContent = marked.parse(markdownText);
+      markdownPreview.innerHTML = htmlContent;
+      itemNotesInput.style.display = 'none';
+      markdownPreview.style.display = 'block';
+      toggleMarkdownBtn.textContent = 'Edit';
+    } else {
+      // Switch to edit mode
+      itemNotesInput.style.display = 'block';
+      markdownPreview.style.display = 'none';
+      toggleMarkdownBtn.textContent = 'Preview';
+    }
+  });
+
+  // Handle paste events for link creation
+  itemNotesInput.addEventListener('paste', (e) => {
+    const clipboardData = e.clipboardData || window.clipboardData;
+    const pastedText = clipboardData.getData('text');
+
+    // Check if it looks like a URL
+    if (pastedText.match(/^https?:\/\//)) {
+      e.preventDefault();
+
+      const selection = window.getSelection();
+      if (selection.rangeCount > 0) {
+        const range = selection.getRangeAt(0);
+        const selectedText = range.toString();
+
+        if (selectedText) {
+          // Replace selected text with markdown link
+          const markdownLink = `[${selectedText}](${pastedText})`;
+          const textarea = itemNotesInput;
+          const start = textarea.selectionStart;
+          const end = textarea.selectionEnd;
+
+          const newText = textarea.value.substring(0, start) + markdownLink + textarea.value.substring(end);
+          textarea.value = newText;
+
+          // Set cursor position after the link
+          textarea.selectionStart = textarea.selectionEnd = start + markdownLink.length;
+        } else {
+          // Just paste the URL
+          document.execCommand('insertText', false, pastedText);
+        }
+      }
+    }
+  });
+}
+
+
+
+
+
 
 // Virtualized multi-year rendering
 let yearsWrapper = null;
@@ -274,9 +342,9 @@ function renderDayItemsPanel() {
         </div>
       </div>
       <div class="title">${escapeHtml(it.title)}</div>
-      ${it.description ? `<div>${escapeHtml(it.description)}</div>` : ''}
       ${it.notes ? `<div class=\"meta\">${escapeHtml(it.notes)}</div>` : ''}
     `;
+
     const editBtn = row.querySelector('[data-action="edit"]');
     const delBtn = row.querySelector('[data-action="delete"]');
     if (editBtn) editBtn.addEventListener('click', () => openItemDialog(it, state.dayItemsDate));
@@ -471,8 +539,8 @@ async function onCellHoverIn(e, dateStr) {
     const ev = state.events.find(e => e.id === it.event_id);
     const color = ev?.color ?? '#999';
     const time = it.time ? ` • ${escapeHtml(it.time)}` : '';
-    const desc = it.description ? `<div class=\"meta\">${escapeHtml(it.description)}</div>` : '';
-    return `<div class=\"tip-item\"><span class=\"pill\" style=\"background:${color}\"></span><strong>${escapeHtml(it.title)}</strong>${time}${desc}</div>`;
+    const notes = it.notes ? `<div class=\"meta\">${escapeHtml(it.notes)}</div>` : '';
+    return `<div class=\"tip-item\"><span class=\"pill\" style=\"background:${color}\"></span><strong>${escapeHtml(it.title)}</strong>${time}${notes}</div>`;
   });
 
   const rect = e.clientX && e.clientY ? { x: e.clientX, y: e.clientY } : null;
@@ -1226,7 +1294,6 @@ function renderItemsPanel() {
         </div>
       </div>
       <div class="title">${escapeHtml(it.title)}</div>
-      ${it.description ? `<div>${escapeHtml(it.description)}</div>` : ''}
       ${it.notes ? `<div class=\"meta\">${escapeHtml(it.notes)}</div>` : ''}
     `;
 
@@ -1311,7 +1378,7 @@ function onCellRightClick(cell, dateStr, eventObj) {
   const event = state.events.find(e => e.id === state.drawEventId);
   const hasModifiedItems = eventItems.some(item => {
     const defaultTitle = `${event?.title || 'Event'} - ${formatDate(dateStr)}`;
-    return item.title !== defaultTitle || item.time || item.description || item.notes;
+    return item.title !== defaultTitle || item.time || item.notes;
   });
 
   if (hasModifiedItems) {
@@ -1437,37 +1504,55 @@ function openItemDialog(item, dateStr) {
   });
 
   itemTitleInput.value = item?.title ?? '';
+  itemDateInput.value = item?.date ?? dateStr;
   itemTimeInput.value = item?.time ?? '';
-  itemDescriptionInput.value = item?.description ?? '';
   itemNotesInput.value = item?.notes ?? '';
+
+  // Set up markdown functionality
+  setupMarkdownToggle();
+
+  // Handle cancel button
+  if (cancelItemBtn) {
+    cancelItemBtn.onclick = () => {
+      itemDialog.close();
+    };
+  }
 
   itemForm.onsubmit = async (e) => {
     e.preventDefault();
     const selectedEventId = parseInt(eventInput.value);
+    const selectedDate = itemDateInput.value;
 
     if (!selectedEventId) {
       alert('Please select an event');
       return;
     }
 
+    if (!selectedDate) {
+      alert('Please select a date');
+      return;
+    }
+
     if (!item?.id) {
       await api.post('/api/items', {
         event_id: selectedEventId,
-        date: currentEditItemDate,
+        date: selectedDate,
         title: itemTitleInput.value,
         time: itemTimeInput.value || null,
-        description: itemDescriptionInput.value || null,
         notes: itemNotesInput.value || null,
       });
-      await loadItemsForDate(currentEditItemDate);
+      await loadItemsForDate(selectedDate);
     } else {
+      const oldDate = item.date;
       await api.patch(`/api/items/${item.id}`, {
+        date: selectedDate,
         title: itemTitleInput.value,
         time: itemTimeInput.value || null,
-        description: itemDescriptionInput.value || null,
         notes: itemNotesInput.value || null,
       });
-      await loadItemsForDate(currentEditItemDate);
+      // Reload items for both old and new dates
+      await loadItemsForDate(oldDate);
+      await loadItemsForDate(selectedDate);
     }
 
     itemDialog.close();

@@ -9,6 +9,7 @@
     <meta http-equiv="Expires" content="0" />
     <title>Colendar</title>
     <link rel="stylesheet" href="{% static 'core/styles.css' %}" />
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
   </head>
   <body>
     <div id="app" data-preselected-events="{% if preselected_event_ids %}{{ preselected_event_ids|safe }}{% else %}null{% endif %}">
@@ -115,20 +116,28 @@
             <input type="text" id="itemTitle" required />
           </div>
           <div class="form-group">
+            <label for="itemDate">Date</label>
+            <input type="date" id="itemDate" required />
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
             <label for="itemTime">Time</label>
             <input type="time" id="itemTime" />
           </div>
         </div>
         <div class="form-group">
-          <label for="itemDescription">Description</label>
-          <textarea id="itemDescription" rows="3"></textarea>
-        </div>
-        <div class="form-group">
-          <label for="itemNotes">Notes</label>
-          <textarea id="itemNotes" rows="3"></textarea>
+          <label for="itemNotes">
+            Notes
+            <button type="button" id="toggleMarkdown" class="markdown-toggle">Preview</button>
+          </label>
+          <div class="markdown-container">
+            <textarea id="itemNotes" rows="6" placeholder="Enter markdown text..."></textarea>
+            <div id="markdownPreview" class="markdown-preview" style="display: none;"></div>
+          </div>
         </div>
         <menu>
-          <button type="button" value="cancel">Cancel</button>
+          <button type="button" id="cancelItem">Cancel</button>
           <button type="submit" id="saveItem">Save</button>
         </menu>
       </form>
