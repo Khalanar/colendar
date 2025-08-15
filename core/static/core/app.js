@@ -398,6 +398,26 @@ if (todayBtn) todayBtn.addEventListener('click', () => {
   const now = new Date();
   const todayStr = toDateStr(now.getFullYear(), now.getMonth(), now.getDate());
   scrollToDate(todayStr);
+
+  // Select today's cell
+  clearMultiSelection();
+  state.multiSelectStart = todayStr;
+  state.selectedDates.add(todayStr);
+  updateVisualSelection();
+
+  // Check if today has events and expand sidebar if needed
+  const items = state.itemsCache.get(todayStr) || [];
+  const hasEvents = items.length > 0;
+
+  if (hasEvents && layoutEl.classList.contains('sidebar-collapsed')) {
+    layoutEl.classList.remove('sidebar-collapsed');
+    localStorage.setItem('sidebarCollapsed', '0');
+  }
+
+  // Load items for today and update UI
+  loadItemsForDate(todayStr).then(() => {
+    renderDayItemsPanel();
+  });
 });
 if (addEventLink) {
   addEventLink.addEventListener('click', (e) => { e.preventDefault(); openEventDialog(null); });
