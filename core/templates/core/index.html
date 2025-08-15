@@ -149,6 +149,6 @@
       // Pass preselected event IDs from Django to JavaScript
       window.preselectedEventIds = JSON.parse(document.getElementById('app').getAttribute('data-preselected-events') || 'null');
     </script>
-    <script src="{% static 'core/app.js' %}?v={{ timestamp|default:'1' }}" type="module"></script>
+    <script src="{% static 'core/app.js' %}?v={{ timestamp|default:'1' }}&cb={{ timestamp|default:'1' }}" type="module"></script>
   </body>
 </html>
