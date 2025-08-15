@@ -202,27 +202,24 @@ function setupMarkdownToggle() {
     if (pastedText.match(/^https?:\/\//)) {
       e.preventDefault();
 
-      const selection = window.getSelection();
-      if (selection.rangeCount > 0) {
-        const range = selection.getRangeAt(0);
-        const selectedText = range.toString();
+      const textarea = itemNotesInput;
+      const start = textarea.selectionStart;
+      const end = textarea.selectionEnd;
+      const selectedText = textarea.value.substring(start, end);
 
-        if (selectedText) {
-          // Replace selected text with markdown link
-          const markdownLink = `[${selectedText}](${pastedText})`;
-          const textarea = itemNotesInput;
-          const start = textarea.selectionStart;
-          const end = textarea.selectionEnd;
+      if (selectedText && selectedText.trim()) {
+        // Replace selected text with markdown link
+        const markdownLink = `[${selectedText}](${pastedText})`;
+        const newText = textarea.value.substring(0, start) + markdownLink + textarea.value.substring(end);
+        textarea.value = newText;
 
-          const newText = textarea.value.substring(0, start) + markdownLink + textarea.value.substring(end);
-          textarea.value = newText;
-
-          // Set cursor position after the link
-          textarea.selectionStart = textarea.selectionEnd = start + markdownLink.length;
-        } else {
-          // Just paste the URL
-          document.execCommand('insertText', false, pastedText);
-        }
+        // Set cursor position after the link
+        textarea.selectionStart = textarea.selectionEnd = start + markdownLink.length;
+      } else {
+        // Just paste the URL
+        const newText = textarea.value.substring(0, start) + pastedText + textarea.value.substring(end);
+        textarea.value = newText;
+        textarea.selectionStart = textarea.selectionEnd = start + pastedText.length;
       }
     }
   });
