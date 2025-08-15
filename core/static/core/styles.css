@@ -474,6 +474,8 @@ dialog h3 {
   padding: 10px 12px;
   font-size: 14px;
   transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .form-group input:focus,
@@ -487,14 +489,6 @@ dialog h3 {
 /* Event display styling */
 .event-display {
   margin-bottom: 8px;
-}
-
-.event-display label {
-  font-size: 12px;
-  color: var(--muted);
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  margin-bottom: 4px;
 }
 
 .event-info {
@@ -975,6 +969,7 @@ menu button:active {
 
 .markdown-container {
   position: relative;
+  width: 100%;
 }
 
 .markdown-preview {
