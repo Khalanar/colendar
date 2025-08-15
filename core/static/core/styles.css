@@ -50,7 +50,7 @@ body {
 .sidebar { border-left: 1px solid var(--border); padding: 0; display: flex; flex-direction: column; min-height: 0; overflow: hidden; transition: opacity 0.25s ease, transform 0.25s ease; }
 
 /* Panels (right sidebar) */
-.events-panel, .items-panel, .day-panel { background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0)) , var(--panel); border: 1px solid var(--border); border-radius: 0; box-shadow: none; backdrop-filter: none; overflow: hidden; }
+.events-panel, .items-panel, .day-panel { background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0)) , var(--panel); border: 1px solid var(--border); border-bottom: none; border-radius: 0; box-shadow: none; backdrop-filter: none; overflow: hidden; }
 
 /* Day panel without side borders */
 .day-panel { border-left: none; border-right: none; }
@@ -77,7 +77,7 @@ body {
   align-items: center;
   justify-content: space-between;
   padding: 5px 16px;
-  border-bottom: 2px solid var(--border);
+  border-bottom: 1px solid var(--border);
   position: sticky;
   top: 0;
   background: linear-gradient(180deg, rgba(255,255,255,0.04), rgba(0,0,0,0.02)) , var(--panel);
