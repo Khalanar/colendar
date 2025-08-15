@@ -492,16 +492,9 @@ dialog h3 {
 }
 
 .event-info {
-  background: var(--bg-secondary);
-  border: 1px solid var(--border);
-  border-radius: 6px;
-  padding: 8px 12px;
   font-size: 14px;
   color: var(--text-primary);
   display: flex;
-  align-items: center;
-  gap: 8px;
-  min-height: 20px;
 }
 
 .event-placeholder {
