@@ -50,11 +50,13 @@ let state = {
 const HIGHLIGHT_KEY = 'highlightEventIds';
 const ORDER_KEY = 'eventOrder';
 
-// Configure marked to make all links open in new tabs
+// Configure marked to make all links open in new tabs and add QR buttons for Google Maps
 marked.use({
   renderer: {
     link(href, title, text) {
-      return `<a href="${href}" target="_blank" rel="noopener noreferrer"${title ? ` title="${title}"` : ''}>${text}</a>`;
+      const isGoogleMaps = href.includes('maps.google.com') || href.includes('goo.gl/maps') || href.includes('maps.app.goo.gl');
+      const qrButton = isGoogleMaps ? `<button class="qr-button" onclick="showQRCode('${href}')" title="Show QR code">📱</button>` : '';
+      return `<a href="${href}" target="_blank" rel="noopener noreferrer"${title ? ` title="${title}"` : ''}>${text}</a>${qrButton}`;
     }
   }
 });
@@ -2135,3 +2137,41 @@ document.addEventListener('keydown', (e) => {
     }
   }
 });
+
+// QR Code functionality
+function showQRCode(url) {
+  // Create QR code using a simple API
+  const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(url)}`;
+
+  // Create modal
+  const modal = document.createElement('div');
+  modal.className = 'qr-modal';
+  modal.innerHTML = `
+    <div class="qr-modal-content">
+      <div class="qr-modal-header">
+        <h3>Scan QR Code</h3>
+        <button class="qr-close-btn" onclick="closeQRModal()">×</button>
+      </div>
+      <div class="qr-modal-body">
+        <img src="${qrCodeUrl}" alt="QR Code" />
+        <p>Scan this QR code with your phone to open the location in Google Maps</p>
+      </div>
+    </div>
+  `;
+
+  document.body.appendChild(modal);
+
+  // Close modal when clicking outside
+  modal.addEventListener('click', (e) => {
+    if (e.target === modal) {
+      closeQRModal();
+    }
+  });
+}
+
+function closeQRModal() {
+  const modal = document.querySelector('.qr-modal');
+  if (modal) {
+    modal.remove();
+  }
+}
