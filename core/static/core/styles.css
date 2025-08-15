@@ -907,13 +907,13 @@ menu button:active {
 /* Prevent pointer cursor on interactive children like thumbnails */
 .panel-header .selected-thumbs, .panel-header .selected-thumbs * { cursor: default; }
 
-/* Panel hover effects - show border when hovering over header */
-.events-panel .panel-header:hover {
+/* Panel hover effects - show border on entire panel when hovering over header */
+.events-panel:has(.panel-header:hover) {
   border-color: var(--accent);
   transition: border-color 0.2s ease;
 }
 
-.items-panel .panel-header:hover {
+.items-panel:has(.panel-header:hover) {
   border-color: var(--accent);
   transition: border-color 0.2s ease;
 }
