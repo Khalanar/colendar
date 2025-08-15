@@ -54,8 +54,12 @@ const ORDER_KEY = 'eventOrder';
 marked.use({
   renderer: {
     link(href, title, text) {
+      // Debug: log what we're receiving
+      console.log('Marked renderer called with:', { href, title, text });
+
       // Only handle the case where href is not a string (the actual error)
       if (!href || typeof href !== 'string') {
+        console.log('Falling back due to invalid href');
         return `<a href="#" target="_blank" rel="noopener noreferrer"${title ? ` title="${title}"` : ''}>${text || 'link'}</a>`;
       }
 
