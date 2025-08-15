@@ -64,7 +64,7 @@ body {
 .events-panel.collapsed #addEventLink { display: none; }
 
 /* Make items panel scrollable inside under its header */
-.items-panel { display: flex; flex-direction: column; min-height: 0; }
+.items-panel { display: flex; flex-direction: column; min-height: 0; max-height: 50vh; }
 .items-panel #itemsList { flex: 1 1 auto; min-height: 0; overflow-y: auto; }
 /* Keep header visible; list hidden when collapsed */
 .items-panel.collapsed #itemsList { display: none; }
