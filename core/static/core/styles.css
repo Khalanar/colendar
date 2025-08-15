@@ -1049,6 +1049,7 @@ menu button:active {
 .markdown-container {
   position: relative;
   width: 100%;
+  min-height: 120px;
 }
 
 .markdown-preview {
@@ -1056,10 +1057,16 @@ menu button:active {
   border: 1px solid var(--border);
   border-radius: 6px;
   padding: 12px;
-  min-height: 100px;
+  min-height: 120px;
   font-size: 14px;
   line-height: 1.5;
   overflow-y: auto;
+  display: none;
+}
+
+#itemNotes {
+  min-height: 120px;
+  resize: vertical;
 }
 
 .markdown-preview h1,
@@ -1144,6 +1151,29 @@ menu button:active {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+/* Item time styling */
+.item-time {
+  font-size: 12px;
+  color: var(--muted);
+  font-weight: normal;
+  margin-left: 8px;
+}
+
+/* Item title with time */
+.item .title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.item .title > span:first-child {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 

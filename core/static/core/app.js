@@ -345,14 +345,17 @@ function renderDayItemsPanel() {
       <div class="row">
         <div class="meta">
           <span class="event-color-indicator" style="background:${ev?.color ?? '#999'}"></span>
-          ${escapeHtml(ev?.title ?? 'Event')} • ${formatDate(state.dayItemsDate)}${it.time ? ' • ' + escapeHtml(it.time) : ''}
+          ${escapeHtml(ev?.title ?? 'Event')} • ${formatDate(state.dayItemsDate)}
         </div>
         <div class="actions">
           <button data-action="edit">Edit</button>
           <button data-action="delete">Delete</button>
         </div>
       </div>
-      <div class="title">${escapeHtml(it.title)}</div>
+      <div class="title">
+        <span>${escapeHtml(it.title)}</span>
+        ${it.time ? `<span class="item-time">${escapeHtml(it.time)}</span>` : ''}
+      </div>
       ${it.notes ? `<div class=\"meta\">${marked.parse(it.notes)}</div>` : ''}
     `;
 
@@ -1317,13 +1320,16 @@ function renderItemsPanel() {
     div.className = 'item';
     div.innerHTML = `
       <div class="row">
-        <div class="meta"><span class="event-color-indicator" style="background:${ev?.color ?? '#999'}"></span>${ev?.title ?? 'Event'} • ${formatDate(it._date)}${it.time ? ' • ' + it.time : ''}</div>
+        <div class="meta"><span class="event-color-indicator" style="background:${ev?.color ?? '#999'}"></span>${ev?.title ?? 'Event'} • ${formatDate(it._date)}</div>
         <div class="actions">
           <button data-action="edit">Edit</button>
           <button data-action="delete">Delete</button>
         </div>
       </div>
-      <div class="title">${escapeHtml(it.title)}</div>
+      <div class="title">
+        <span>${escapeHtml(it.title)}</span>
+        ${it.time ? `<span class="item-time">${escapeHtml(it.time)}</span>` : ''}
+      </div>
       ${it.notes ? `<div class=\"meta\">${marked.parse(it.notes)}</div>` : ''}
     `;
 
@@ -1352,11 +1358,42 @@ function escapeHtml(s) { return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;'
 
 function onCellClick(cell, dateStr, event) {
   const isShiftClick = event && event.shiftKey;
+  const isCommandClick = event && (event.metaKey || event.ctrlKey);
 
   if (isShiftClick && state.multiSelectStart) {
     // Multi-selection: select range from start to current cell
     state.multiSelectEnd = dateStr;
     updateMultiSelection();
+  } else if (isCommandClick) {
+    // Command+Click: toggle individual date selection
+    if (state.selectedDates.has(dateStr)) {
+      state.selectedDates.delete(dateStr);
+      cell.classList.remove('multi-selected');
+    } else {
+      state.selectedDates.add(dateStr);
+      cell.classList.add('multi-selected');
+    }
+
+    // Update UI based on selection count
+    if (state.selectedDates.size === 0) {
+      clearMultiSelection();
+    } else if (state.selectedDates.size === 1) {
+      // Single selection
+      const singleDate = Array.from(state.selectedDates)[0];
+      state.dayItemsDate = singleDate;
+      loadItemsForDate(singleDate).then(() => {
+        renderDayItemsPanel();
+      });
+    } else {
+      // Multi-selection
+      loadSelectedDatesItems();
+    }
+
+    // Ensure sidebar is expanded
+    if (layoutEl.classList.contains('sidebar-collapsed')) {
+      layoutEl.classList.remove('sidebar-collapsed');
+      localStorage.setItem('sidebarCollapsed', '0');
+    }
   } else {
     // Single selection: clear previous selection and start new one
     clearMultiSelection();
@@ -1576,14 +1613,17 @@ function renderMultiSelectionPanel() {
           <div class="row">
             <div class="meta">
               <span class="event-color-indicator" style="background:${ev?.color ?? '#999'}"></span>
-              ${escapeHtml(ev?.title ?? 'Event')} • ${formatDate(item._date)}${item.time ? ' • ' + escapeHtml(item.time) : ''}
+              ${escapeHtml(ev?.title ?? 'Event')} • ${formatDate(item._date)}
             </div>
             <div class="actions">
               <button data-action="edit">Edit</button>
               <button data-action="delete">Delete</button>
             </div>
           </div>
-          <div class="title">${escapeHtml(item.title)}</div>
+          <div class="title">
+            <span>${escapeHtml(item.title)}</span>
+            ${item.time ? `<span class="item-time">${escapeHtml(item.time)}</span>` : ''}
+          </div>
           ${item.notes ? `<div class=\"meta\">${escapeHtml(item.notes)}</div>` : ''}
         `;
 
