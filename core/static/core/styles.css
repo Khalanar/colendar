@@ -315,7 +315,7 @@ body {
 .weekdays { display: grid; grid-template-columns: repeat(7, 1fr); font-size: 11px; color: var(--muted); gap: 2px; margin-bottom: 4px; }
 .weekdays span { text-align: center; }
 .days-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px; }
-.cell { position: relative; aspect-ratio: 1/1; background: transparent; border: 1px solid #111827; border-radius: 6px; overflow: hidden; cursor: pointer; }
+.cell { position: relative; aspect-ratio: 1/1; background: transparent; border: 1px solid #111827; border-radius: 6px; overflow: hidden; cursor: pointer; user-select: none; }
 .cell:hover { outline: 2px solid #253044; }
 .cell.today { border-color: #ffffff; border-width: 2px; }
 .cell.day-active { border-color: var(--accent); border-width: 2px; }

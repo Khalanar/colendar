@@ -1447,14 +1447,8 @@ function updateVisualSelection() {
     if (cell) {
       cell.classList.add('day-active');
     }
-  } else if (state.selectedDates.size > 1) {
-    // Multi-selection: highlight the first selected cell
-    const dateStr = Array.from(state.selectedDates)[0];
-    const cell = document.querySelector(`[data-date="${dateStr}"]`);
-    if (cell) {
-      cell.classList.add('day-active');
-    }
   }
+  // For multi-selection, don't add day-active class to avoid conflicting styling
 }
 
 async function loadSelectedDatesItems() {
