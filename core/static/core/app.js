@@ -1503,7 +1503,33 @@ function renderMultiSelectionPanel() {
   const dates = Array.from(state.selectedDates).sort();
   const startDate = formatDate(dates[0]);
   const endDate = formatDate(dates[dates.length - 1]);
-  const title = dates.length === 2 ? `${startDate} - ${endDate}` : `From ${startDate} to ${endDate}`;
+
+    // For ranges, show "Month Day - Month Day, Year" format
+  let title;
+  if (dates.length === 2) {
+    const [startY, startM, startD] = dates[0].split('-').map(n => parseInt(n, 10));
+    const [endY, endM, endD] = dates[1].split('-').map(n => parseInt(n, 10));
+    const months = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+
+    const getOrdinalSuffix = (day) => {
+      const teen = day % 100;
+      const last = day % 10;
+      if (teen >= 11 && teen <= 13) return 'th';
+      if (last === 1) return 'st';
+      if (last === 2) return 'nd';
+      if (last === 3) return 'rd';
+      return 'th';
+    };
+
+    const startMonth = months[startM - 1];
+    const endMonth = months[endM - 1];
+    const startSuffix = getOrdinalSuffix(startD);
+    const endSuffix = getOrdinalSuffix(endD);
+
+    title = `${startMonth} ${startD}${startSuffix} - ${endMonth} ${endD}${endSuffix}, ${startY}`;
+  } else {
+    title = `From ${startDate} to ${endDate}`;
+  }
 
   if (dayPanelTitleEl) {
     dayPanelTitleEl.textContent = title;
