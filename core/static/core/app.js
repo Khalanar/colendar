@@ -50,6 +50,15 @@ let state = {
 const HIGHLIGHT_KEY = 'highlightEventIds';
 const ORDER_KEY = 'eventOrder';
 
+// Configure marked to make all links open in new tabs
+marked.use({
+  renderer: {
+    link(href, title, text) {
+      return `<a href="${href}" target="_blank" rel="noopener noreferrer"${title ? ` title="${title}"` : ''}>${text}</a>`;
+    }
+  }
+});
+
 // Drag-and-drop transient state
 let dnd = { draggingId: null, indicatorRow: null, indicatorThumb: null };
 
