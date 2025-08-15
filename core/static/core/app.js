@@ -126,7 +126,7 @@ function formatDate(dateStr) {
   // dateStr is YYYY-MM-DD
   const [y, m, d] = dateStr.split('-').map(n => parseInt(n, 10));
   const day = d;
-  const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  const months = ['January','February','March','April','May','June','July','August','September','October','November','December'];
   const month = months[m - 1];
   const teen = day % 100;
   const last = day % 10;
@@ -142,7 +142,7 @@ function formatDate(dateStr) {
     suffix = 'rd';
   }
 
-  return `${day}${suffix} ${month}`;
+  return `${month} ${day}${suffix}`;
 }
 // Color utilities for contrast decisions
 function hexToRgb(hex) {
