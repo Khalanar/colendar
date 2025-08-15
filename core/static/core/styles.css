@@ -319,6 +319,18 @@ body {
 .cell:hover { outline: 2px solid #253044; }
 .cell.today { border-color: #ffffff; border-width: 2px; }
 .cell.day-active { border-color: var(--accent); border-width: 2px; }
+
+/* Multi-selection styles */
+.cell.multi-selected {
+  background: rgba(124, 92, 255, 0.2);
+  border: 2px solid var(--accent);
+}
+
+.cell.multi-selected.day-active {
+  background: var(--accent);
+  color: white;
+  border: 2px solid var(--accent);
+}
 .cell .date { position: absolute; top: 2px; right: 4px; font-size: 10px; color: var(--muted); z-index: 2; }
 .cell.date-light .date { color: #f8fafc; }
 .cell.date-dark .date { color: #0b0f1a; }

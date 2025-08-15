@@ -40,8 +40,12 @@ let state = {
   drawEventId: null,
   viewingEventId: null,
   highlightEventIds: new Set(),
-  itemsCache: new Map(), // date -> items[] for all events
+  itemsCache: new Map(), // date -> items[] for items
   dayItemsDate: null,
+  // Multi-selection state
+  multiSelectStart: null, // YYYY-MM-DD of first selected cell
+  multiSelectEnd: null,   // YYYY-MM-DD of last selected cell
+  selectedDates: new Set(), // Set of YYYY-MM-DD strings
 };
 const HIGHLIGHT_KEY = 'highlightEventIds';
 const ORDER_KEY = 'eventOrder';
@@ -463,7 +467,7 @@ function buildYearSection(year) {
       if (dateStr === todayStr) { cell.classList.add('today'); }
       const dateBadge = document.createElement('div'); dateBadge.className = 'date'; dateBadge.textContent = d; cell.appendChild(dateBadge);
       const splits = document.createElement('div'); splits.className = 'splits'; cell.appendChild(splits);
-      cell.addEventListener('click', () => onCellClick(cell, dateStr));
+      cell.addEventListener('click', (e) => onCellClick(cell, dateStr, e));
       cell.addEventListener('mouseenter', (e) => { onCellHoverIn(e, dateStr); });
       cell.addEventListener('mouseleave', (e) => onCellHoverOut(e));
       cell.addEventListener('contextmenu', (e) => onCellRightClick(cell, dateStr, e));
@@ -1320,55 +1324,226 @@ function renderItemsPanel() {
 
 function escapeHtml(s) { return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;','\'':'&#039;'}[c])); }
 
-function onCellClick(cell, dateStr) {
-  // Check if this cell has any events and expand sidebar if collapsed
-  const items = state.itemsCache.get(dateStr) || [];
-  const hasEvents = items.length > 0;
+function onCellClick(cell, dateStr, event) {
+  const isShiftClick = event && event.shiftKey;
 
-  if (hasEvents && layoutEl.classList.contains('sidebar-collapsed')) {
-    layoutEl.classList.remove('sidebar-collapsed');
-    localStorage.setItem('sidebarCollapsed', '0');
-  }
+  if (isShiftClick && state.multiSelectStart) {
+    // Multi-selection: select range from start to current cell
+    state.multiSelectEnd = dateStr;
+    updateMultiSelection();
+  } else {
+    // Single selection: clear previous selection and start new one
+    clearMultiSelection();
+    state.multiSelectStart = dateStr;
+    state.selectedDates.add(dateStr);
 
-  if (state.drawEventId) {
-    const existingItems = state.itemsCache.get(dateStr) || [];
-    const existingItem = existingItems.find(item => item.event_id === state.drawEventId);
+    // Check if this cell has any events and expand sidebar if collapsed
+    const items = state.itemsCache.get(dateStr) || [];
+    const hasEvents = items.length > 0;
 
-    if (existingItem) {
+    if (hasEvents && layoutEl.classList.contains('sidebar-collapsed')) {
+      layoutEl.classList.remove('sidebar-collapsed');
+      localStorage.setItem('sidebarCollapsed', '0');
+    }
+
+    if (state.drawEventId) {
+      const existingItems = state.itemsCache.get(dateStr) || [];
+      const existingItem = existingItems.find(item => item.event_id === state.drawEventId);
+
+      if (existingItem) {
+        state.dayItemsDate = dateStr;
+        // Ensure items are loaded before rendering the panel
+        loadItemsForDate(dateStr).then(() => {
+          renderDayItemsPanel();
+        });
+      } else {
+        const eventObj = state.events.find(e => e.id === state.drawEventId);
+        // Default title no longer includes the date; just use the event title
+        const defaultTitle = `${eventObj?.title || 'Event'}`;
+
+        api.post('/api/items', {
+          event_id: state.drawEventId,
+          date: dateStr,
+          title: defaultTitle
+        }).then(async () => {
+          await loadItemsForDate(dateStr);
+          paintCalendarSelections();
+          renderItemsPanel();
+          state.dayItemsDate = dateStr;
+          renderDayItemsPanel();
+        });
+      }
+    } else {
       state.dayItemsDate = dateStr;
       // Ensure items are loaded before rendering the panel
       loadItemsForDate(dateStr).then(() => {
         renderDayItemsPanel();
       });
-    } else {
-      const event = state.events.find(e => e.id === state.drawEventId);
-      // Default title no longer includes the date; just use the event title
-      const defaultTitle = `${event?.title || 'Event'}`;
+    }
+  }
 
-      api.post('/api/items', {
-        event_id: state.drawEventId,
-        date: dateStr,
-        title: defaultTitle
-      }).then(async () => {
-        await loadItemsForDate(dateStr);
-        paintCalendarSelections();
-        renderItemsPanel();
-        state.dayItemsDate = dateStr;
-        renderDayItemsPanel();
+  // Visual selection: update day-active class
+  updateVisualSelection();
+}
+
+function clearMultiSelection() {
+  state.multiSelectStart = null;
+  state.multiSelectEnd = null;
+  state.selectedDates.clear();
+  // Clear visual selection
+  document.querySelectorAll('.cell.multi-selected').forEach(el => el.classList.remove('multi-selected'));
+}
+
+function updateMultiSelection() {
+  if (!state.multiSelectStart || !state.multiSelectEnd) return;
+
+  // Clear previous selection
+  state.selectedDates.clear();
+  document.querySelectorAll('.cell.multi-selected').forEach(el => el.classList.remove('multi-selected'));
+
+  // Get all dates between start and end (inclusive)
+  const startDate = new Date(state.multiSelectStart);
+  const endDate = new Date(state.multiSelectEnd);
+
+  // Ensure start is before end
+  if (startDate > endDate) {
+    [state.multiSelectStart, state.multiSelectEnd] = [state.multiSelectEnd, state.multiSelectStart];
+    [startDate, endDate] = [endDate, startDate];
+  }
+
+  // Add all dates in range to selection
+  const currentDate = new Date(startDate);
+  while (currentDate <= endDate) {
+    const dateStr = toDateStr(currentDate.getFullYear(), currentDate.getMonth(), currentDate.getDate());
+    state.selectedDates.add(dateStr);
+
+    // Add visual selection
+    const cell = document.querySelector(`[data-date="${dateStr}"]`);
+    if (cell) {
+      cell.classList.add('multi-selected');
+    }
+
+    currentDate.setDate(currentDate.getDate() + 1);
+  }
+
+  // Load items for all selected dates and update UI
+  loadSelectedDatesItems();
+}
+
+function updateVisualSelection() {
+  // Clear previous visual selection
+  document.querySelectorAll('.cell.day-active').forEach(el => el.classList.remove('day-active'));
+
+  if (state.selectedDates.size === 1) {
+    // Single selection: highlight the selected cell
+    const dateStr = Array.from(state.selectedDates)[0];
+    const cell = document.querySelector(`[data-date="${dateStr}"]`);
+    if (cell) {
+      cell.classList.add('day-active');
+    }
+  } else if (state.selectedDates.size > 1) {
+    // Multi-selection: highlight the first selected cell
+    const dateStr = Array.from(state.selectedDates)[0];
+    const cell = document.querySelector(`[data-date="${dateStr}"]`);
+    if (cell) {
+      cell.classList.add('day-active');
+    }
+  }
+}
+
+async function loadSelectedDatesItems() {
+  // Load items for all selected dates
+  for (const dateStr of state.selectedDates) {
+    await loadItemsForDate(dateStr);
+  }
+
+  // Update UI to show items from all selected dates
+  renderMultiSelectionPanel();
+}
+
+function renderMultiSelectionPanel() {
+  if (state.selectedDates.size === 0) {
+    // No selection, hide multi-selection panel
+    if (dayPanelEl) {
+      dayPanelEl.style.display = 'none';
+    }
+    return;
+  }
+
+  if (state.selectedDates.size === 1) {
+    // Single selection, show normal day panel
+    const dateStr = Array.from(state.selectedDates)[0];
+    state.dayItemsDate = dateStr;
+    renderDayItemsPanel();
+    return;
+  }
+
+  // Multi-selection: show items from all selected dates
+  if (dayPanelEl) {
+    dayPanelEl.style.display = 'block';
+  }
+
+  // Update panel title to show date range
+  const dates = Array.from(state.selectedDates).sort();
+  const startDate = formatDate(dates[0]);
+  const endDate = formatDate(dates[dates.length - 1]);
+  const title = dates.length === 2 ? `${startDate} - ${endDate}` : `${startDate} to ${endDate} (${dates.length} days)`;
+
+  if (dayPanelTitleEl) {
+    dayPanelTitleEl.textContent = title;
+  }
+
+  // Collect all items from selected dates
+  const allItems = [];
+  for (const dateStr of dates) {
+    const items = state.itemsCache.get(dateStr) || [];
+    allItems.push(...items.map(item => ({ ...item, _date: dateStr })));
+  }
+
+  // Sort items by date, then by time
+  allItems.sort((a, b) => {
+    if (a._date !== b._date) {
+      return a._date.localeCompare(b._date);
+    }
+    if (a.time && b.time) {
+      return a.time.localeCompare(b.time);
+    }
+    return (a.time || '').localeCompare(b.time || '');
+  });
+
+  // Render items
+  if (dayItemsListEl) {
+    dayItemsListEl.innerHTML = '';
+
+    if (allItems.length === 0) {
+      const noItemsEl = document.createElement('div');
+      noItemsEl.className = 'no-items';
+      noItemsEl.textContent = 'No items in selected range';
+      dayItemsListEl.appendChild(noItemsEl);
+    } else {
+      allItems.forEach(item => {
+        const itemEl = createItemElement(item);
+        dayItemsListEl.appendChild(itemEl);
       });
     }
-  } else {
-    state.dayItemsDate = dateStr;
-    // Ensure items are loaded before rendering the panel
-    loadItemsForDate(dateStr).then(() => {
-      renderDayItemsPanel();
+
+    // Add "Add Item" link for multi-selection
+    const addItemLink = document.createElement('a');
+    addItemLink.className = 'add-item-link';
+    addItemLink.innerHTML = '＋ Add Item to Range';
+    addItemLink.href = '#';
+    addItemLink.addEventListener('click', (e) => {
+      e.preventDefault();
+      openMultiItemDialog();
     });
+    dayItemsListEl.appendChild(addItemLink);
   }
-  // Visual selection: move day-active to the clicked cell
-  try {
-    document.querySelectorAll('.cell.day-active').forEach(el => el.classList.remove('day-active'));
-    cell.classList.add('day-active');
-  } catch {}
+}
+
+function openMultiItemDialog() {
+  // Open item dialog for multi-day creation
+  const firstDate = Array.from(state.selectedDates).sort()[0];
+  openItemDialog(null, firstDate);
 }
 
 function onCellRightClick(cell, dateStr, eventObj) {
@@ -1547,14 +1722,31 @@ function openItemDialog(item, dateStr) {
     }
 
     if (!item?.id) {
-      await api.post('/api/items', {
-        event_id: selectedEventId,
-        date: selectedDate,
-        title: itemTitleInput.value,
-        time: itemTimeInput.value || null,
-        notes: itemNotesInput.value || null,
-      });
-      await loadItemsForDate(selectedDate);
+      // Check if we're in multi-selection mode
+      if (state.selectedDates.size > 1) {
+        // Create items for all selected dates
+        const dates = Array.from(state.selectedDates).sort();
+        for (const dateStr of dates) {
+          await api.post('/api/items', {
+            event_id: selectedEventId,
+            date: dateStr,
+            title: itemTitleInput.value,
+            time: itemTimeInput.value || null,
+            notes: itemNotesInput.value || null,
+          });
+          await loadItemsForDate(dateStr);
+        }
+      } else {
+        // Single item creation
+        await api.post('/api/items', {
+          event_id: selectedEventId,
+          date: selectedDate,
+          title: itemTitleInput.value,
+          time: itemTimeInput.value || null,
+          notes: itemNotesInput.value || null,
+        });
+        await loadItemsForDate(selectedDate);
+      }
     } else {
       const oldDate = item.date;
       await api.patch(`/api/items/${item.id}`, {
@@ -1572,7 +1764,13 @@ function openItemDialog(item, dateStr) {
     await loadItemsForEvent(selectedEventId);
     paintCalendarSelections();
     renderItemsPanel();
-    renderDayItemsPanel();
+
+    // Update the appropriate panel based on selection
+    if (state.selectedDates.size > 1) {
+      renderMultiSelectionPanel();
+    } else {
+      renderDayItemsPanel();
+    }
   };
 
   itemDialog.showModal();
