@@ -57,15 +57,28 @@ marked.use({
       // Debug: log what we're receiving
       console.log('Marked renderer called with:', { href, title, text });
 
-      // Only handle the case where href is not a string (the actual error)
-      if (!href || typeof href !== 'string') {
+      // Handle different parameter formats that marked might use
+      let actualHref, actualTitle, actualText;
+
+      if (typeof href === 'object' && href.href) {
+        // If href is an object with a href property
+        actualHref = href.href;
+        actualTitle = href.title || title;
+        actualText = href.text || text;
+      } else if (typeof href === 'string') {
+        // Normal case
+        actualHref = href;
+        actualTitle = title;
+        actualText = text;
+      } else {
+        // Fallback for invalid cases
         console.log('Falling back due to invalid href');
-        return `<a href="#" target="_blank" rel="noopener noreferrer"${title ? ` title="${title}"` : ''}>${text || 'link'}</a>`;
+        return `<a href="#" target="_blank" rel="noopener noreferrer">link</a>`;
       }
 
-      const isGoogleMaps = href.includes('maps.google.com') || href.includes('goo.gl/maps') || href.includes('maps.app.goo.gl');
-      const qrButton = isGoogleMaps ? `<button class="qr-button" onclick="showQRCode('${href}')" title="Show QR code">📱</button>` : '';
-      return `<a href="${href}" target="_blank" rel="noopener noreferrer"${title ? ` title="${title}"` : ''}>${text}</a>${qrButton}`;
+      const isGoogleMaps = actualHref.includes('maps.google.com') || actualHref.includes('goo.gl/maps') || actualHref.includes('maps.app.goo.gl');
+      const qrButton = isGoogleMaps ? `<button class="qr-button" onclick="showQRCode('${actualHref}')" title="Show QR code">📱</button>` : '';
+      return `<a href="${actualHref}" target="_blank" rel="noopener noreferrer"${actualTitle ? ` title="${actualTitle}"` : ''}>${actualText}</a>${qrButton}`;
     }
   }
 });
