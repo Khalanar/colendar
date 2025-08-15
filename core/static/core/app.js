@@ -344,7 +344,7 @@ function renderDayItemsPanel() {
     row.innerHTML = `
       <div class="row">
         <div class="meta">
-          <span style="display:inline-block;width:10px;height:10px;background:${ev?.color ?? '#999'};border-radius:2px;margin-right:6px"></span>
+          <span class="event-color-indicator" style="background:${ev?.color ?? '#999'}"></span>
           ${escapeHtml(ev?.title ?? 'Event')} • ${formatDate(state.dayItemsDate)}${it.time ? ' • ' + escapeHtml(it.time) : ''}
         </div>
         <div class="actions">
@@ -1317,7 +1317,7 @@ function renderItemsPanel() {
     div.className = 'item';
     div.innerHTML = `
       <div class="row">
-        <div class="meta"><span style="display:inline-block;width:10px;height:10px;background:${ev?.color ?? '#999'};border-radius:2px;margin-right:6px"></span>${ev?.title ?? 'Event'} • ${formatDate(it._date)}${it.time ? ' • ' + it.time : ''}</div>
+        <div class="meta"><span class="event-color-indicator" style="background:${ev?.color ?? '#999'}"></span>${ev?.title ?? 'Event'} • ${formatDate(it._date)}${it.time ? ' • ' + it.time : ''}</div>
         <div class="actions">
           <button data-action="edit">Edit</button>
           <button data-action="delete">Delete</button>
@@ -1575,7 +1575,7 @@ function renderMultiSelectionPanel() {
         row.innerHTML = `
           <div class="row">
             <div class="meta">
-              <span style="display:inline-block;width:10px;height:10px;background:${ev?.color ?? '#999'};border-radius:2px;margin-right:6px"></span>
+              <span class="event-color-indicator" style="background:${ev?.color ?? '#999'}"></span>
               ${escapeHtml(ev?.title ?? 'Event')} • ${formatDate(item._date)}${item.time ? ' • ' + escapeHtml(item.time) : ''}
             </div>
             <div class="actions">

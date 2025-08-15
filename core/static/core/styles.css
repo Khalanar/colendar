@@ -1129,4 +1129,21 @@ menu button:active {
   font-style: italic;
 }
 
+/* Color indicator for events */
+.event-color-indicator {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border-radius: 2px;
+  margin-right: 6px;
+  flex-shrink: 0;
+}
+
+/* Prevent text wrapping in item meta */
+.item .meta {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
 
