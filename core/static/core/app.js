@@ -142,7 +142,7 @@ function formatDate(dateStr) {
     suffix = 'rd';
   }
 
-  return `${month} ${day}${suffix}`;
+  return `${month} ${day}${suffix}, ${y}`;
 }
 // Color utilities for contrast decisions
 function hexToRgb(hex) {
