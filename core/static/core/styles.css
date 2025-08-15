@@ -908,16 +908,12 @@ menu button:active {
 .panel-header .selected-thumbs, .panel-header .selected-thumbs * { cursor: default; }
 
 /* Panel hover effects - show border when hovering over header */
-.events-panel .panel-header:hover ~ *,
-.events-panel .panel-header:hover,
-.events-panel:hover {
+.events-panel .panel-header:hover {
   border-color: var(--accent);
   transition: border-color 0.2s ease;
 }
 
-.items-panel .panel-header:hover ~ *,
-.items-panel .panel-header:hover,
-.items-panel:hover {
+.items-panel .panel-header:hover {
   border-color: var(--accent);
   transition: border-color 0.2s ease;
 }
