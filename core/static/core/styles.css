@@ -459,7 +459,7 @@ body {
   transition: background .12s ease, color .12s ease;
   font-size: 14px;
   font-weight: 500;
-  margin-top: 8px;
+  margin-top: 0px;
   text-align: center;
 }
 
