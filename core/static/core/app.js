@@ -1424,8 +1424,8 @@ function updateMultiSelection() {
   document.querySelectorAll('.cell.multi-selected').forEach(el => el.classList.remove('multi-selected'));
 
   // Get all dates between start and end (inclusive)
-  const startDate = new Date(state.multiSelectStart);
-  const endDate = new Date(state.multiSelectEnd);
+  let startDate = new Date(state.multiSelectStart);
+  let endDate = new Date(state.multiSelectEnd);
 
   // Ensure start is before end
   if (startDate > endDate) {
