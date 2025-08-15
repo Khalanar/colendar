@@ -386,6 +386,8 @@ function renderDayItemsPanel() {
   }
 
   // Add "Add Item" link at the bottom
+  const addItemContainer = document.createElement('div');
+  addItemContainer.className = 'add-item-link-container';
   const addItemLink = document.createElement('a');
   addItemLink.className = 'add-item-link';
   addItemLink.innerHTML = '＋ Add Item';
@@ -394,7 +396,8 @@ function renderDayItemsPanel() {
     e.preventDefault();
     openItemDialog(null, state.dayItemsDate);
   });
-  dayItemsListEl.appendChild(addItemLink);
+  addItemContainer.appendChild(addItemLink);
+  dayItemsListEl.appendChild(addItemContainer);
 }
 
 if (closeDayPanelBtn) closeDayPanelBtn.addEventListener('click', () => { state.dayItemsDate = null; renderDayItemsPanel(); });
@@ -1543,6 +1546,8 @@ function renderItemsInPanel(items, dateStr) {
   }
 
   // Add "Add Item" link
+  const addItemContainer = document.createElement('div');
+  addItemContainer.className = 'add-item-link-container';
   const addItemLink = document.createElement('a');
   addItemLink.className = 'add-item-link';
   addItemLink.innerHTML = '＋ Add Item';
@@ -1551,7 +1556,8 @@ function renderItemsInPanel(items, dateStr) {
     e.preventDefault();
     openItemDialog(null, dateStr);
   });
-  dayItemsListEl.appendChild(addItemLink);
+  addItemContainer.appendChild(addItemLink);
+  dayItemsListEl.appendChild(addItemContainer);
 }
 
 function updateVisualSelection() {
@@ -1712,6 +1718,8 @@ function renderMultiSelectionPanel() {
     }
 
     // Add "Add Item" link for multi-selection
+    const addItemContainer = document.createElement('div');
+    addItemContainer.className = 'add-item-link-container';
     const addItemLink = document.createElement('a');
     addItemLink.className = 'add-item-link';
     addItemLink.innerHTML = '＋ Add Item to Range';
@@ -1720,7 +1728,8 @@ function renderMultiSelectionPanel() {
       e.preventDefault();
       openMultiItemDialog();
     });
-    dayItemsListEl.appendChild(addItemLink);
+    addItemContainer.appendChild(addItemLink);
+    dayItemsListEl.appendChild(addItemContainer);
   }
 }
 

@@ -448,6 +448,14 @@ body {
 .item .actions { display: flex; gap: 6px; margin-left: auto; }
 .empty-day { color: var(--muted); font-size: 12px; padding: 12px; text-align: center; }
 
+/* Add Item link container */
+.add-item-link-container {
+  display: flex;
+  justify-content: center;
+  width: 100%;
+  padding: 8px 0;
+}
+
 /* Add Item link */
 .add-item-link {
   display: inline;
@@ -457,7 +465,6 @@ body {
   transition: text-decoration .12s ease;
   font-size: 14px;
   font-weight: 500;
-  margin-top: 0px;
 }
 
 .add-item-link:hover {
