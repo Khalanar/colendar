@@ -99,10 +99,16 @@
       <form method="dialog" id="itemForm">
         <h3 id="itemDialogTitle">New Item</h3>
 
-        <!-- Event display (read-only) -->
-        <div class="form-group event-display">
-          <div class="event-info" id="itemEventDisplay">
-            <span class="event-placeholder">Select an event...</span>
+        <!-- Event selection -->
+        <div class="form-group">
+          <label for="itemEvent">Event</label>
+          <div class="custom-select" id="itemEventContainer">
+            <div class="select-display" id="itemEventDisplay">
+              <span class="select-placeholder">Select an event...</span>
+            </div>
+            <div class="select-dropdown" id="itemEventDropdown">
+              <!-- Options will be populated by JavaScript -->
+            </div>
           </div>
           <input type="hidden" id="itemEvent" required />
         </div>

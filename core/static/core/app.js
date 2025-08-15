@@ -1448,26 +1448,73 @@ function openItemDialog(item, dateStr) {
   currentEditItemDate = dateStr;
   itemDialogTitle.textContent = item?.id ? 'Edit Item' : `New Item (${formatDate(dateStr)})`;
 
-    // Set up event display (read-only)
+      // Populate custom event dropdown with color thumbnails
+  const eventContainer = document.getElementById('itemEventContainer');
   const eventDisplay = document.getElementById('itemEventDisplay');
+  const eventDropdown = document.getElementById('itemEventDropdown');
   const eventInput = document.getElementById('itemEvent');
+
+  // Clear previous content
+  eventDropdown.innerHTML = '';
 
   // Find the selected event - for existing items use item.event_id, for new items use drawEventId
   const eventId = item?.event_id || state.drawEventId;
   const selectedEvent = state.events.find(ev => ev.id === eventId);
 
-  if (selectedEvent) {
-    eventDisplay.innerHTML = `
-      <div class="selected-option">
-        <span class="color-thumb" style="background: ${selectedEvent.color}"></span>
-        <span>${selectedEvent.title}</span>
-      </div>
+  // Create options with color thumbnails
+  state.events.forEach(ev => {
+    const option = document.createElement('div');
+    option.className = 'select-option';
+    option.dataset.value = ev.id;
+    option.innerHTML = `
+      <span class="color-thumb" style="background: ${ev.color}"></span>
+      <span>${ev.title}</span>
     `;
-    eventInput.value = selectedEvent.id;
-  } else {
-    eventDisplay.innerHTML = '<span class="event-placeholder">No event selected</span>';
-    eventInput.value = '';
-  }
+
+    if (ev.id === eventId) {
+      option.classList.add('selected');
+      // Set the display
+      eventDisplay.innerHTML = `
+        <div class="selected-option">
+          <span class="color-thumb" style="background: ${ev.color}"></span>
+          <span>${ev.title}</span>
+        </div>
+      `;
+      eventInput.value = ev.id;
+    }
+
+    option.addEventListener('click', () => {
+      // Update display
+      eventDisplay.innerHTML = `
+        <div class="selected-option">
+          <span class="color-thumb" style="background: ${ev.color}"></span>
+          <span>${ev.title}</span>
+        </div>
+      `;
+      eventInput.value = ev.id;
+
+      // Update selected state
+      eventDropdown.querySelectorAll('.select-option').forEach(opt => opt.classList.remove('selected'));
+      option.classList.add('selected');
+
+      // Close dropdown
+      eventContainer.classList.remove('open');
+    });
+
+    eventDropdown.appendChild(option);
+  });
+
+  // Handle dropdown toggle
+  eventDisplay.addEventListener('click', () => {
+    eventContainer.classList.toggle('open');
+  });
+
+  // Close dropdown when clicking outside
+  document.addEventListener('click', (e) => {
+    if (!eventContainer.contains(e.target)) {
+      eventContainer.classList.remove('open');
+    }
+  });
 
   itemTitleInput.value = item?.title ?? '';
   itemDateInput.value = item?.date ?? dateStr;
