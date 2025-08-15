@@ -1153,6 +1153,16 @@ menu button:active {
   text-overflow: ellipsis;
 }
 
+/* Limit item notes to one line with ellipsis */
+.item .meta:has(p),
+.item .meta p,
+.item .meta div {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+}
+
 /* Item time styling */
 .item-time {
   font-size: 12px;
