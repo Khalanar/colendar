@@ -54,14 +54,14 @@ const ORDER_KEY = 'eventOrder';
 marked.use({
   renderer: {
     link(href, title, text) {
-      // Ensure all parameters are valid strings
-      const safeHref = (href && typeof href === 'string') ? href : '#';
-      const safeText = (text && typeof text === 'string') ? text : 'link';
-      const safeTitle = (title && typeof title === 'string') ? title : '';
+      // Only handle the case where href is not a string (the actual error)
+      if (!href || typeof href !== 'string') {
+        return `<a href="#" target="_blank" rel="noopener noreferrer"${title ? ` title="${title}"` : ''}>${text || 'link'}</a>`;
+      }
 
-      const isGoogleMaps = safeHref.includes('maps.google.com') || safeHref.includes('goo.gl/maps') || safeHref.includes('maps.app.goo.gl');
-      const qrButton = isGoogleMaps ? `<button class="qr-button" onclick="showQRCode('${safeHref}')" title="Show QR code">📱</button>` : '';
-      return `<a href="${safeHref}" target="_blank" rel="noopener noreferrer"${safeTitle ? ` title="${safeTitle}"` : ''}>${safeText}</a>${qrButton}`;
+      const isGoogleMaps = href.includes('maps.google.com') || href.includes('goo.gl/maps') || href.includes('maps.app.goo.gl');
+      const qrButton = isGoogleMaps ? `<button class="qr-button" onclick="showQRCode('${href}')" title="Show QR code">📱</button>` : '';
+      return `<a href="${href}" target="_blank" rel="noopener noreferrer"${title ? ` title="${title}"` : ''}>${text}</a>${qrButton}`;
     }
   }
 });
