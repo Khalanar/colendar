@@ -349,7 +349,7 @@ function renderDayItemsPanel() {
         </div>
       </div>
       <div class="title">${escapeHtml(it.title)}</div>
-      ${it.notes ? `<div class=\"meta\">${escapeHtml(it.notes)}</div>` : ''}
+      ${it.notes ? `<div class=\"meta\">${marked.parse(it.notes)}</div>` : ''}
     `;
 
     const editBtn = row.querySelector('[data-action="edit"]');
@@ -566,7 +566,7 @@ async function onCellHoverIn(e, dateStr) {
     const ev = state.events.find(e => e.id === it.event_id);
     const color = ev?.color ?? '#999';
     const time = it.time ? ` • ${escapeHtml(it.time)}` : '';
-    const notes = it.notes ? `<div class=\"meta\">${escapeHtml(it.notes)}</div>` : '';
+    const notes = it.notes ? `<div class=\"meta\">${marked.parse(it.notes)}</div>` : '';
     return `<div class=\"tip-item\"><span class=\"pill\" style=\"background:${color}\"></span><strong>${escapeHtml(it.title)}</strong>${time}${notes}</div>`;
   });
 
@@ -1321,7 +1321,7 @@ function renderItemsPanel() {
         </div>
       </div>
       <div class="title">${escapeHtml(it.title)}</div>
-      ${it.notes ? `<div class=\"meta\">${escapeHtml(it.notes)}</div>` : ''}
+      ${it.notes ? `<div class=\"meta\">${marked.parse(it.notes)}</div>` : ''}
     `;
 
     div.querySelector('[data-action="edit"]').addEventListener('click', async () => { openItemDialog(it, it._date); });
