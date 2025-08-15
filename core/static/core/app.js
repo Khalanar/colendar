@@ -1321,6 +1321,15 @@ function renderItemsPanel() {
 function escapeHtml(s) { return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;','\'':'&#039;'}[c])); }
 
 function onCellClick(cell, dateStr) {
+  // Check if this cell has any events and expand sidebar if collapsed
+  const items = state.itemsCache.get(dateStr) || [];
+  const hasEvents = items.length > 0;
+
+  if (hasEvents && layoutEl.classList.contains('sidebar-collapsed')) {
+    layoutEl.classList.remove('sidebar-collapsed');
+    localStorage.setItem('sidebarCollapsed', '0');
+  }
+
   if (state.drawEventId) {
     const existingItems = state.itemsCache.get(dateStr) || [];
     const existingItem = existingItems.find(item => item.event_id === state.drawEventId);
