@@ -1438,8 +1438,10 @@ function onCellClick(cell, dateStr, event) {
     }
   }
 
-  // Visual selection: update day-active class
-  updateVisualSelection();
+  // Visual selection: update day-active class (only for non-Command+Click)
+  if (!isCommandClick) {
+    updateVisualSelection();
+  }
 }
 
 function clearMultiSelection() {

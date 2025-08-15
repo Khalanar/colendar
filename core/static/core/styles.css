@@ -450,16 +450,14 @@ body {
 
 /* Add Item link */
 .add-item-link {
-  display: block;
+  display: inline;
   color: var(--accent);
   text-decoration: none;
-  padding: 8px 0;
   cursor: pointer;
   transition: text-decoration .12s ease;
   font-size: 14px;
   font-weight: 500;
   margin-top: 0px;
-  text-align: center;
 }
 
 .add-item-link:hover {
