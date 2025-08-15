@@ -201,6 +201,7 @@ function setupMarkdownToggle() {
     // Check if it looks like a URL
     if (pastedText.match(/^https?:\/\//)) {
       e.preventDefault();
+      e.stopPropagation();
 
       const textarea = itemNotesInput;
       const start = textarea.selectionStart;
@@ -221,6 +222,9 @@ function setupMarkdownToggle() {
         textarea.value = newText;
         textarea.selectionStart = textarea.selectionEnd = start + pastedText.length;
       }
+
+      // Prevent any further processing
+      return false;
     }
   });
 }
